@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex VDS Launcher</title>
+    <link rel="stylesheet" href="../vendor/xterm/xterm.css">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar" aria-label="Навигация Codex VDS Launcher">
+        <header class="brand">
+          <div class="brand-mark neutral-mark" aria-hidden="true">CV</div>
+          <div>
+            <h1>Codex VDS Launcher</h1>
+            <p>SSH launcher for Codex CLI</p>
+          </div>
+        </header>
+
+        <section class="sidebar-section">
+          <h2>Проекты</h2>
+          <div class="project-list" id="projectList"></div>
+        </section>
+
+        <section class="sidebar-section sessions-section">
+          <h2>Сессии</h2>
+          <div class="session-list" id="sessionList"></div>
+        </section>
+
+        <section class="sidebar-section">
+          <h2>Конфиг</h2>
+          <div class="settings-list">
+            <p class="config-path" id="configPath"></p>
+            <p class="config-status" id="configErrors">config.json загружается</p>
+            <button type="button" class="secondary-button full-width-button" id="openConfigFile">Open config file</button>
+            <button type="button" class="secondary-button full-width-button" id="reloadConfig">Reload config</button>
+            <button type="button" class="secondary-button full-width-button" id="copySshConfig">Copy SSH config example</button>
+          </div>
+        </section>
+
+        <section class="sidebar-section">
+          <h2>Оформление</h2>
+          <div class="settings-list">
+            <label class="field-label" for="themeSelect">Тема</label>
+            <select class="select-control" id="themeSelect">
+              <option value="dark">Тёмная</option>
+              <option value="light">Светлая</option>
+            </select>
+
+            <label class="checkbox-row">
+              <input type="checkbox" id="syncAgentInstructions" checked>
+              <span>Синхронизировать AGENTS.md</span>
+            </label>
+            <button type="button" class="secondary-button full-width-button" id="editAgentInstructions">Настроить AGENTS.md</button>
+          </div>
+        </section>
+
+        <section class="sidebar-section">
+          <h2>История</h2>
+          <button type="button" class="danger-button" id="clearHistory" title="Очистить сохранённую историю">Очистить историю</button>
+        </section>
+      </aside>
+
+      <section class="terminal-workspace">
+        <header class="terminal-header">
+          <button type="button" class="tool-button side-toggle" id="toggleLeftPanel" title="Скрыть левую панель" aria-label="Скрыть левую панель" aria-pressed="false">☰</button>
+          <div class="session-title">
+            <p>Активная сессия</p>
+            <h2 id="activeTitle">Server root</h2>
+          </div>
+          <div class="meta-strip" aria-label="Параметры сессии">
+            <span id="activePath">/</span>
+            <span id="activeSshAlias">ssh my-vds</span>
+            <span id="activeCommand">codex-vpn</span>
+          </div>
+          <div class="toolbar" aria-label="Управление терминалом">
+            <button type="button" class="tool-button primary" id="startSession" title="Запустить сессию" aria-label="Запустить сессию">▶</button>
+            <button type="button" class="tool-button" id="stopSession" title="Остановить сессию" aria-label="Остановить сессию">■</button>
+            <button type="button" class="tool-button" id="restartSession" title="Перезапустить сессию" aria-label="Перезапустить сессию">↻</button>
+            <button type="button" class="tool-button" id="clearTerminal" title="Очистить терминал" aria-label="Очистить терминал">⌫</button>
+            <button type="button" class="tool-button" id="openExternal" title="Открыть внешний терминал" aria-label="Открыть внешний терминал">↗</button>
+          </div>
+          <button type="button" class="tool-button side-toggle" id="toggleRightPanel" title="Скрыть правую панель" aria-label="Скрыть правую панель" aria-pressed="false">◨</button>
+        </header>
+
+        <div class="terminal-frame">
+          <div id="terminal" aria-label="Встроенный терминал Codex"></div>
+        </div>
+      </section>
+
+      <aside class="right-panel" aria-label="Статусы и быстрые промпты">
+        <section class="panel-section">
+          <header class="panel-heading">
+            <h2>Статус сервера</h2>
+          </header>
+
+          <div class="status-list" id="statusCards"></div>
+        </section>
+
+        <section class="panel-section">
+          <header class="panel-heading">
+            <h2>Диагностика</h2>
+          </header>
+          <div class="diagnostic-actions" id="diagnosticActions"></div>
+        </section>
+
+        <section class="panel-section">
+          <header class="panel-heading">
+            <h2>Локальные MD</h2>
+          </header>
+          <div class="markdown-actions">
+            <button type="button" class="diagnostic-button" id="runMarkdownFile">Выполнить Markdown</button>
+            <div class="markdown-drop-zone" id="markdownDropZone">Перетащите .md сюда</div>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <header class="panel-heading">
+            <h2>Быстрые промпты</h2>
+            <button type="button" class="mini-button add-button" id="addQuickPrompt" title="Редактировать в config.json" aria-label="Редактировать быстрые промпты в config.json">＋</button>
+          </header>
+          <div class="prompt-list" id="quickPrompts"></div>
+        </section>
+
+        <section class="panel-section">
+          <header class="panel-heading">
+            <h2>Быстрые команды</h2>
+            <button type="button" class="mini-button add-button" id="addQuickCommandSet" title="Добавить набор команд" aria-label="Добавить набор команд">＋</button>
+          </header>
+          <div class="prompt-list" id="quickCommandSets"></div>
+        </section>
+      </aside>
+    </main>
+
+    <dialog class="item-dialog" id="quickItemDialog">
+      <form class="dialog-card" id="quickItemForm">
+        <header class="dialog-heading">
+          <h2 id="quickItemDialogTitle">Быстрый элемент</h2>
+          <button type="button" class="mini-button" id="cancelQuickItem" title="Закрыть" aria-label="Закрыть">×</button>
+        </header>
+
+        <label class="field-label" for="quickItemTitle">Название</label>
+        <input class="text-control" id="quickItemTitle" name="title" maxlength="80" required>
+
+        <label class="field-label" for="quickItemText">Текст</label>
+        <textarea class="text-control textarea-control" id="quickItemText" name="text" rows="8" required></textarea>
+
+        <footer class="dialog-actions">
+          <button type="button" class="secondary-button" id="cancelQuickItemFooter">Отмена</button>
+          <button type="submit" class="primary-button">Сохранить</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <dialog class="item-dialog agent-dialog" id="agentInstructionsDialog">
+      <form class="dialog-card" id="agentInstructionsForm">
+        <header class="dialog-heading">
+          <h2>AGENTS.md</h2>
+          <button type="button" class="mini-button" id="cancelAgentInstructions" title="Закрыть" aria-label="Закрыть">×</button>
+        </header>
+
+        <label class="field-label" for="agentInstructionsText">Инструкции для Codex</label>
+        <textarea class="text-control textarea-control agent-textarea" id="agentInstructionsText" name="agentInstructions" rows="14" required></textarea>
+
+        <footer class="dialog-actions">
+          <button type="button" class="secondary-button" id="resetAgentInstructions">Сбросить</button>
+          <button type="button" class="secondary-button" id="cancelAgentInstructionsFooter">Отмена</button>
+          <button type="submit" class="primary-button">Сохранить</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <footer class="status-bar">
+      <span>SSH alias: <strong id="footerAlias">my-vds</strong></span>
+      <span>Активный проект: <strong id="footerProject">Server root</strong></span>
+      <span>Статус сессии: <strong id="footerStatus">неактивна</strong></span>
+      <span>История: <strong id="historyStatus">загрузка</strong></span>
+      <span>Codex: <strong id="footerCommand">codex-vpn</strong></span>
+      <span>Секреты не хранятся</span>
+    </footer>
+
+    <script src="../vendor/xterm/xterm.js"></script>
+    <script src="../vendor/xterm-addon-fit/addon-fit.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

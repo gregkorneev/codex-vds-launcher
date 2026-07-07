@@ -1,0 +1,8 @@
+node_modules/
+dist/
+out/
+codex-history.json
+codex-settings.json
+.DS_Store
+npm-debug.log*
+*.log

@@ -1,0 +1,80 @@
+{
+  "name": "codex-vds-launcher",
+  "version": "1.1.0",
+  "description": "Desktop launcher for running Codex CLI on your VDS over SSH",
+  "desktopName": "Codex VDS Launcher",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "rebuild": "electron-rebuild",
+    "postinstall": "electron-builder install-app-deps",
+    "dist": "electron-builder --publish never",
+    "check": "node --check src/main.js && node --check src/preload.js && node --check src/renderer/app.js"
+  },
+  "build": {
+    "appId": "app.codex-vds.launcher",
+    "productName": "Codex VDS Launcher",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "icon": "build/icon.icns",
+      "identity": "-",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis",
+        "squirrel"
+      ]
+    },
+    "linux": {
+      "category": "Development",
+      "icon": "build/icon.png",
+      "maintainer": "Codex VDS Launcher contributors",
+      "synopsis": "Codex VDS launcher",
+      "syncDesktopName": true,
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false
+    },
+    "publish": null
+  },
+  "keywords": [
+    "electron",
+    "codex",
+    "vds",
+    "ssh"
+  ],
+  "author": "Codex VDS Launcher contributors",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron/rebuild": "^4.1.0",
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "node-pty": "^1.1.0"
+  }
+}
