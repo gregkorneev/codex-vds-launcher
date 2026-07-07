@@ -33,12 +33,12 @@ jobs:
         run: npx electron-builder --mac dmg zip --publish never
 
       - name: Publish GitHub pre-release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: Codex VDS Launcher Developer Beta 1
-          prerelease: true
-          draft: false
-          body: |
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TITLE: Codex VDS Launcher Developer Beta 1
+        run: |
+          cat > release-notes.md <<'EOF'
             ## English
 
             Developer Beta 1 for Codex VDS Launcher.
@@ -72,9 +72,12 @@ jobs:
             - Это pre-release для ручного тестирования.
             - macOS-приложение подписано ad-hoc и не notarized.
             - Перед запуском сессий настройте свой SSH alias в `~/.ssh/config`.
-          files: |
-            dist/*.dmg
-            dist/*.zip
-            dist/*.blockmap
-            dist/latest-mac.yml
-          fail_on_unmatched_files: false
+          EOF
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes-file release-notes.md --prerelease
+          else
+            gh release create "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes-file release-notes.md --prerelease
+          fi
+
+          gh release upload "$RELEASE_TAG" dist/*.dmg dist/*.zip dist/*.blockmap --clobber
