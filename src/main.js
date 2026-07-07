@@ -4,8 +4,12 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const pty = require('node-pty');
+const packageJson = require('../package.json');
 
 const APP_NAME = 'Codex VDS Launcher';
+const BETA_APP_NAME = 'Codex VDS Launcher Beta';
+const RELEASE_NAME = packageJson.releaseName || 'Codex VDS Launcher Developer Beta 2';
+const DISPLAY_VERSION = packageJson.displayVersion || packageJson.version;
 const SSH_CONNECT_TIMEOUT_SECONDS = 15;
 const DIAGNOSTIC_TIMEOUT_MS = 30000;
 const LONG_DIAGNOSTIC_TIMEOUT_MS = 60000;
@@ -18,14 +22,9 @@ const SETTINGS_FILE_NAME = 'codex-settings.json';
 const MANAGED_AGENT_MARKER = '<!-- Managed by Codex VDS Launcher -->';
 const MAX_MARKDOWN_INSTRUCTION_BYTES = 256 * 1024;
 const ALLOWED_CODEX_COMMANDS = new Set(['codex', 'codex-vpn']);
-const TRAY_ICON_DATA_URL = [
-  'data:image/png;base64,',
-  'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAqElEQVR4nO2WQQ6AIAwE',
-  '5f9/8wY9GGORthAxIal7xztpFFpS0AYgkCmXw01Pb1YgH0yBHwOSAjtmglDuC4Uc',
-  'hK4BUAA8TpuKdzJkp1yTaIFwZdt8oLwChQuv1Ds6zrRAPzcBAkGc3XB3XY1vAe8B',
-  'wRAtWgdeVCE3mUdEeQWkQzVF5xWQDNR/PACukRDKC+AeCMZs/tdDLZvgPZEu48pV',
-  '0l1YzCIclg8ihTHmF1YaTyHF4AFHG2ohTNfaGAAAAABJRU5ErkJggg=='
-].join('');
+const RENDERER_ASSETS_DIR = path.join(__dirname, 'renderer', 'assets');
+const APP_ICON_PATH = path.join(RENDERER_ASSETS_DIR, 'app-icon.png');
+const TRAY_ICON_PATH = path.join(RENDERER_ASSETS_DIR, 'tray-iconTemplate@2x.png');
 
 const DEFAULT_QUICK_PROMPTS = [
   {
@@ -90,7 +89,7 @@ const DEFAULT_AGENT_INSTRUCTIONS = [
 
 const DEFAULT_CONFIG = {
   sshAlias: 'my-vds',
-  codexCommand: 'codex-vpn',
+  codexCommand: 'codex',
   projects: [
     {
       id: 'root',
@@ -391,6 +390,7 @@ function normalizeSettings(value = {}) {
     theme,
     accentColor,
     panels: normalizePanelSettings(value.panels),
+    onboardingSeen: value.onboardingSeen === true,
     syncAgentInstructions: value.syncAgentInstructions !== false,
     agentInstructions: normalizeAgentInstructions(value.agentInstructions),
     quickCommandSets: normalizeQuickItems(value.quickCommandSets, DEFAULT_QUICK_COMMAND_SETS)
@@ -435,10 +435,24 @@ function saveSettings(settings) {
   return normalized;
 }
 
+function saveQuickPrompts(quickPrompts) {
+  const current = readJsonFile(CONFIG_FILE_NAME, DEFAULT_CONFIG);
+  const normalizedPrompts = normalizeQuickItems(quickPrompts, DEFAULT_QUICK_PROMPTS);
+  writeJsonFile(CONFIG_FILE_NAME, {
+    ...current,
+    quickPrompts: normalizedPrompts
+  });
+  return loadAppConfig();
+}
+
 function sendToRenderer(channel, payload) {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send(channel, payload);
   }
+}
+
+function sendUiCommand(command) {
+  sendToRenderer('ui:command', { command });
 }
 
 function getSshConfigPath() {
@@ -998,6 +1012,7 @@ function createWindow() {
     minWidth: 1100,
     minHeight: 760,
     title: APP_NAME,
+    icon: APP_ICON_PATH,
     backgroundColor: '#0f172a',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -1011,6 +1026,86 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+}
+
+function configureAboutPanel() {
+  app.setAboutPanelOptions({
+    applicationName: APP_NAME,
+    applicationVersion: DISPLAY_VERSION,
+    version: DISPLAY_VERSION,
+    copyright: 'Copyright © 2026 Codex VDS Launcher contributors',
+    iconPath: APP_ICON_PATH
+  });
+}
+
+function setupApplicationMenu() {
+  const appMenu = [
+    { label: `О ${APP_NAME}`, role: 'about' },
+    { label: 'Инструкция подключения к VDS', click: () => sendUiCommand('show-setup-guide') },
+    { type: 'separator' },
+    { role: 'services', label: 'Службы' },
+    { type: 'separator' },
+    { label: `Скрыть ${APP_NAME}`, role: 'hide' },
+    { label: 'Скрыть остальные', role: 'hideOthers' },
+    { label: 'Показать все', role: 'unhide' },
+    { type: 'separator' },
+    {
+      label: `Закрыть ${APP_NAME}`,
+      accelerator: 'Command+Q',
+      click: () => {
+        stopAllTerminalSessions();
+        app.quit();
+      }
+    }
+  ];
+
+  const template = [
+    ...(process.platform === 'darwin' ? [{ label: APP_NAME, submenu: appMenu }] : []),
+    {
+      label: 'Подключение',
+      submenu: [
+        { label: 'Инструкция подключения к VDS', accelerator: 'CmdOrCtrl+Shift+/', click: () => sendUiCommand('show-setup-guide') },
+        { label: 'Открыть config.json', accelerator: 'CmdOrCtrl+,', click: () => sendUiCommand('open-config') },
+        { label: 'Перезагрузить config.json', accelerator: 'CmdOrCtrl+R', click: () => sendUiCommand('reload-config') },
+        { label: 'Скопировать пример SSH config', click: () => sendUiCommand('copy-ssh-config') },
+        { type: 'separator' },
+        { label: 'Проверить SSH', click: () => sendUiCommand('run-ssh-check') }
+      ]
+    },
+    {
+      label: 'Сессия',
+      submenu: [
+        { label: 'Запустить сессию', accelerator: 'CmdOrCtrl+Enter', click: () => sendUiCommand('start-session') },
+        { label: 'Остановить сессию', click: () => sendUiCommand('stop-session') },
+        { label: 'Перезапустить сессию', accelerator: 'CmdOrCtrl+Shift+R', click: () => sendUiCommand('restart-session') },
+        { label: 'Открыть внешний терминал', click: () => sendUiCommand('open-external') },
+        { type: 'separator' },
+        { label: 'Очистить терминал', click: () => sendUiCommand('clear-terminal') },
+        { label: 'Очистить историю', click: () => sendUiCommand('clear-history') }
+      ]
+    },
+    {
+      label: 'Панели',
+      submenu: [
+        { label: 'Показать/скрыть левую панель', click: () => sendUiCommand('toggle-left-panel') },
+        { label: 'Показать/скрыть правую панель', click: () => sendUiCommand('toggle-right-panel') },
+        { type: 'separator' },
+        { label: 'Полный экран', role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Справка',
+      submenu: [
+        { label: RELEASE_NAME, enabled: false },
+        { label: `Версия ${DISPLAY_VERSION}`, enabled: false },
+        { type: 'separator' },
+        { label: 'Показать приветственный экран', click: () => sendUiCommand('show-welcome') },
+        { label: 'Инструкция подключения', click: () => sendUiCommand('show-setup-guide') }
+      ]
+    }
+  ];
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 function showMainWindow() {
@@ -1031,14 +1126,17 @@ function createTray() {
     return;
   }
 
-  const image = nativeImage.createFromDataURL(TRAY_ICON_DATA_URL);
-  tray = new Tray(process.platform === 'darwin' ? image.resize({ width: 18, height: 18 }) : image);
+  const image = nativeImage.createFromPath(TRAY_ICON_PATH);
+  const trayImage = process.platform === 'darwin' ? image.resize({ width: 18, height: 18 }) : image;
+  trayImage.setTemplateImage(process.platform === 'darwin');
+  tray = new Tray(trayImage);
   tray.setToolTip(APP_NAME);
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: `Open ${APP_NAME}`, click: showMainWindow },
+    { label: `Открыть ${APP_NAME}`, click: showMainWindow },
+    { label: 'Инструкция подключения', click: () => sendUiCommand('show-setup-guide') },
     {
-      label: 'Open first project',
+      label: 'Открыть первый проект во внешнем терминале',
       click: () => {
         const project = getConfig().projects[0];
         if (project) {
@@ -1048,15 +1146,15 @@ function createTray() {
     },
     { type: 'separator' },
     {
-      label: 'Clear history',
+      label: 'Очистить историю',
       click: () => {
         const result = dialog.showMessageBoxSync(mainWindow || undefined, {
           type: 'warning',
-          buttons: ['Cancel', 'Clear history'],
+          buttons: ['Отмена', 'Очистить историю'],
           defaultId: 0,
           cancelId: 0,
-          message: 'Clear saved terminal history?',
-          detail: 'Saved terminal buffers for all projects will be deleted.'
+          message: 'Очистить сохранённую историю терминала?',
+          detail: 'Сохранённые буферы терминала для всех проектов будут удалены.'
         });
 
         if (result !== 1) {
@@ -1069,7 +1167,7 @@ function createTray() {
     },
     { type: 'separator' },
     {
-      label: 'Quit',
+      label: 'Выйти',
       click: () => {
         stopAllTerminalSessions();
         app.quit();
@@ -1095,6 +1193,12 @@ function registerHandlers() {
     return { ok: true, config, history };
   });
   ipcMain.handle('config:sshExample', () => buildSshConfigExample(getConfig().sshAlias));
+  ipcMain.handle('config:saveQuickPrompts', (_event, quickPrompts) => {
+    const config = saveQuickPrompts(quickPrompts);
+    const history = loadHistory();
+    sendToRenderer('config:changed', { config, history });
+    return { ok: true, config, history };
+  });
   ipcMain.handle('ssh:setupStatus', () => getSshSetupStatus());
   ipcMain.handle('diagnostic:run', (_event, checkId, projectId) => runDiagnostic(checkId, projectId));
 
@@ -1129,8 +1233,11 @@ function registerHandlers() {
 }
 
 app.whenReady().then(() => {
+  app.setName(BETA_APP_NAME);
+  configureAboutPanel();
   loadAppConfig();
   registerHandlers();
+  setupApplicationMenu();
   createWindow();
   createTray();
 

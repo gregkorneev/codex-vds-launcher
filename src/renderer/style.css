@@ -184,16 +184,13 @@ body.right-panel-hidden .right-panel {
 }
 
 .brand-mark {
-  display: grid;
   width: 58px;
   height: 58px;
-  place-items: center;
   overflow: hidden;
-  border: 1px solid rgba(56, 189, 248, 0.46);
+  flex: 0 0 auto;
+  border: 1px solid rgba(56, 189, 248, 0.28);
   border-radius: var(--radius);
-  background: linear-gradient(135deg, #e0f2fe, #1d4ed8);
-  color: #ffffff;
-  font-weight: 800;
+  object-fit: cover;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
 }
 
@@ -216,9 +213,16 @@ body.right-panel-hidden .right-panel {
   padding-top: 16px;
 }
 
+.panel-section {
+  padding-top: 20px;
+}
+
 .sidebar-section + .sidebar-section,
 .sidebar-section + .disclosure-section,
-.disclosure-section + .sidebar-section {
+.disclosure-section + .sidebar-section,
+.panel-section + .panel-section,
+.panel-section + .disclosure-section,
+.disclosure-section + .panel-section {
   margin-top: 18px;
 }
 
@@ -238,6 +242,15 @@ body.right-panel-hidden .right-panel {
   letter-spacing: 0;
   list-style-position: outside;
   text-transform: uppercase;
+}
+
+.panel-disclosure {
+  margin-top: 0;
+}
+
+.panel-disclosure summary {
+  min-height: 32px;
+  margin-bottom: 12px;
 }
 
 .disclosure-content {
@@ -457,6 +470,8 @@ body.right-panel-hidden #toggleRightPanel {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  min-height: 32px;
+  margin-bottom: 12px;
 }
 
 .panel-heading h2 {
@@ -504,6 +519,12 @@ body[data-theme="light"] .meta-strip span {
 }
 
 body[data-theme="light"] .status-output {
+  background: #f8fafc;
+  color: #334155;
+}
+
+body[data-theme="light"] .guide-steps code,
+body[data-theme="light"] .guide-steps pre {
   background: #f8fafc;
   color: #334155;
 }
@@ -597,6 +618,7 @@ body[data-theme="light"] .tool-button.primary {
   grid-template-columns: minmax(0, 1fr) 28px 28px;
   gap: 6px;
   align-items: stretch;
+  min-height: 36px;
 }
 
 .quick-main-button {
@@ -646,7 +668,8 @@ body[data-theme="light"] .accent-swatch.active {
 }
 
 .config-path,
-.config-status {
+.config-status,
+.config-help {
   overflow-wrap: anywhere;
   color: var(--muted);
   font-size: 0.76rem;
@@ -679,6 +702,17 @@ body[data-theme="light"] .accent-swatch.active {
 .field-label {
   color: var(--muted);
   font-size: 0.78rem;
+}
+
+.version-note {
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.version-note strong {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .select-control {
@@ -717,6 +751,118 @@ body[data-theme="light"] .accent-swatch.active {
 
 .agent-textarea {
   min-height: 300px;
+}
+
+.guide-dialog {
+  width: min(840px, calc(100vw - 36px));
+}
+
+.guide-card {
+  max-height: min(760px, calc(100vh - 48px));
+}
+
+.dialog-kicker {
+  margin-bottom: 4px;
+  color: var(--accent-cyan);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.guide-content {
+  display: grid;
+  gap: 14px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.guide-hero {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+}
+
+.guide-hero img {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.guide-hero h3 {
+  margin: 0 0 6px;
+  font-size: 1.08rem;
+  letter-spacing: 0;
+}
+
+.guide-hero p,
+.guide-grid span,
+.guide-steps span {
+  color: var(--muted);
+  line-height: 1.38;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.guide-grid article {
+  min-height: 96px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.guide-grid strong,
+.guide-grid span {
+  display: block;
+}
+
+.guide-grid strong {
+  margin-bottom: 6px;
+}
+
+.guide-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.guide-steps li {
+  padding-left: 4px;
+  line-height: 1.42;
+}
+
+.guide-steps strong,
+.guide-steps code,
+.guide-steps pre {
+  display: block;
+}
+
+.guide-steps code,
+.guide-steps pre {
+  margin-top: 6px;
+  padding: 8px 9px;
+  overflow: auto;
+  border-radius: 6px;
+  background: #0d1516;
+  color: #cbd6e3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.guide-steps code {
+  white-space: nowrap;
 }
 
 .danger-button {

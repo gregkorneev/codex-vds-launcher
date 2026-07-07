@@ -1,3 +1,6 @@
+const DISPLAY_VERSION = '1 - beta 2 (1 - beta 2)';
+const RELEASE_NAME = 'Codex VDS Launcher Developer Beta 2';
+
 const DIAGNOSTICS = [
   {
     id: 'ssh',
@@ -71,13 +74,18 @@ const TRANSLATIONS = {
     projects: 'Проекты',
     sessions: 'Сессии',
     config: 'Конфиг',
+    vdsConfiguration: 'Конфигурация VDS',
     configLoading: 'config.json загружается',
     configLoaded: 'config.json загружен',
     openConfig: 'Открыть config file',
     reloadConfig: 'Перезагрузить config',
     copySshConfig: 'Скопировать пример SSH config',
+    codexCommandHelpCodex: 'Команда Codex на VDS: codex. Это обычный вариант для новых пользователей.',
+    codexCommandHelpVpn: 'Команда Codex на VDS: codex-vpn. Используйте только если вы сами настроили такую VPN-обёртку на сервере.',
+    openSetupGuide: 'Инструкция подключения',
     language: 'Язык',
     appearance: 'Оформление',
+    customization: 'Кастомизация',
     theme: 'Тема',
     themeDark: 'Тёмная',
     themeLight: 'Светлая',
@@ -105,6 +113,7 @@ const TRANSLATIONS = {
     quickPrompts: 'Быстрые промпты',
     quickCommands: 'Быстрые команды',
     editPromptsInConfig: 'Редактировать быстрые промпты в config.json',
+    addQuickPrompt: 'Добавить быстрый промпт',
     addCommandSet: 'Добавить набор команд',
     close: 'Закрыть',
     title: 'Название',
@@ -112,6 +121,8 @@ const TRANSLATIONS = {
     cancel: 'Отмена',
     save: 'Сохранить',
     reset: 'Сбросить',
+    startUsing: 'Начать работу',
+    versionLabel: 'Версия',
     codexInstructions: 'Инструкции для Codex',
     sshAlias: 'SSH alias',
     activeProject: 'Активный проект',
@@ -137,7 +148,7 @@ const TRANSLATIONS = {
     diagSsh: 'SSH check',
     diagRemoteInfo: 'Remote whoami/hostname/pwd',
     diagCodexCommand: 'Проверка команды Codex',
-    diagVpnCommand: 'Проверка команды VPN',
+    diagVpnCommand: 'Проверка codex-vpn (опционально)',
     diagServerHealth: 'Здоровье сервера',
     diagGitStatus: 'Git status текущего проекта',
     diagDockerCompose: 'Docker compose check',
@@ -163,7 +174,10 @@ const TRANSLATIONS = {
     sshUseExample: 'Используйте “Copy SSH config example”, добавьте блок в ~/.ssh/config и перезагрузите config.',
     addQuickCommandSetDialog: 'Добавить набор команд',
     editQuickCommandSetDialog: 'Изменить набор команд',
+    addQuickPromptDialog: 'Добавить быстрый промпт',
+    editQuickPromptDialog: 'Изменить быстрый промпт',
     commandSetPlaceholder: 'Команды, которые будут отправлены в активную консоль',
+    quickPromptPlaceholder: 'Промпт, который будет вставлен в активную консоль',
     deletePrompt: 'Удалить',
     editPrompt: 'Изменить',
     localMarkdownInstruction: 'Выполни инструкции из локального Markdown-файла пользователя.',
@@ -175,13 +189,18 @@ const TRANSLATIONS = {
     projects: 'Projects',
     sessions: 'Sessions',
     config: 'Config',
+    vdsConfiguration: 'VDS Configuration',
     configLoading: 'Loading config.json',
     configLoaded: 'config.json loaded',
     openConfig: 'Open config file',
     reloadConfig: 'Reload config',
     copySshConfig: 'Copy SSH config example',
+    codexCommandHelpCodex: 'Codex command on VDS: codex. This is the normal choice for new users.',
+    codexCommandHelpVpn: 'Codex command on VDS: codex-vpn. Use it only if you created that VPN wrapper on your server.',
+    openSetupGuide: 'Connection guide',
     language: 'Language',
     appearance: 'Appearance',
+    customization: 'Customization',
     theme: 'Theme',
     themeDark: 'Dark',
     themeLight: 'Light',
@@ -209,6 +228,7 @@ const TRANSLATIONS = {
     quickPrompts: 'Quick prompts',
     quickCommands: 'Quick commands',
     editPromptsInConfig: 'Edit quick prompts in config.json',
+    addQuickPrompt: 'Add quick prompt',
     addCommandSet: 'Add command set',
     close: 'Close',
     title: 'Title',
@@ -216,6 +236,8 @@ const TRANSLATIONS = {
     cancel: 'Cancel',
     save: 'Save',
     reset: 'Reset',
+    startUsing: 'Start using',
+    versionLabel: 'Version',
     codexInstructions: 'Instructions for Codex',
     sshAlias: 'SSH alias',
     activeProject: 'Active project',
@@ -241,7 +263,7 @@ const TRANSLATIONS = {
     diagSsh: 'SSH check',
     diagRemoteInfo: 'Remote whoami/hostname/pwd',
     diagCodexCommand: 'Codex command check',
-    diagVpnCommand: 'VPN command check',
+    diagVpnCommand: 'codex-vpn wrapper check (optional)',
     diagServerHealth: 'Server health',
     diagGitStatus: 'Git status current project',
     diagDockerCompose: 'Docker compose check',
@@ -267,7 +289,10 @@ const TRANSLATIONS = {
     sshUseExample: 'Use “Copy SSH config example”, add it to ~/.ssh/config, then reload config.',
     addQuickCommandSetDialog: 'Add command set',
     editQuickCommandSetDialog: 'Edit command set',
+    addQuickPromptDialog: 'Add quick prompt',
+    editQuickPromptDialog: 'Edit quick prompt',
     commandSetPlaceholder: 'Commands that will be sent to the active terminal',
+    quickPromptPlaceholder: 'Prompt that will be inserted into the active terminal',
     deletePrompt: 'Delete',
     editPrompt: 'Edit',
     localMarkdownInstruction: 'Run the instructions from the user selected local Markdown file.',
@@ -290,6 +315,7 @@ const footerCommand = document.querySelector('#footerCommand');
 const historyStatus = document.querySelector('#historyStatus');
 const configPath = document.querySelector('#configPath');
 const configErrors = document.querySelector('#configErrors');
+const codexCommandHelp = document.querySelector('#codexCommandHelp');
 const quickPrompts = document.querySelector('#quickPrompts');
 const quickCommandSets = document.querySelector('#quickCommandSets');
 const statusCards = document.querySelector('#statusCards');
@@ -318,6 +344,7 @@ const toggleRightPanelButton = document.querySelector('#toggleRightPanel');
 const openConfigButton = document.querySelector('#openConfigFile');
 const reloadConfigButton = document.querySelector('#reloadConfig');
 const copySshConfigButton = document.querySelector('#copySshConfig');
+const openSetupGuideButton = document.querySelector('#openSetupGuide');
 const addQuickPromptButton = document.querySelector('#addQuickPrompt');
 const addQuickCommandSetButton = document.querySelector('#addQuickCommandSet');
 const quickItemDialog = document.querySelector('#quickItemDialog');
@@ -327,6 +354,15 @@ const quickItemTitle = document.querySelector('#quickItemTitle');
 const quickItemText = document.querySelector('#quickItemText');
 const cancelQuickItemButton = document.querySelector('#cancelQuickItem');
 const cancelQuickItemFooterButton = document.querySelector('#cancelQuickItemFooter');
+const setupGuideDialog = document.querySelector('#setupGuideDialog');
+const setupGuideKicker = document.querySelector('#setupGuideKicker');
+const setupGuideTitle = document.querySelector('#setupGuideTitle');
+const setupGuideContent = document.querySelector('#setupGuideContent');
+const closeSetupGuideButton = document.querySelector('#closeSetupGuide');
+const finishSetupGuideButton = document.querySelector('#finishSetupGuide');
+const copyGuideSshConfigButton = document.querySelector('#copyGuideSshConfig');
+const openGuideConfigButton = document.querySelector('#openGuideConfig');
+const appVersionLabel = document.querySelector('#appVersionLabel');
 
 const terminal = new Terminal({
   cursorBlink: true,
@@ -349,7 +385,7 @@ terminal.open(terminalElement);
 
 let appConfig = {
   sshAlias: 'my-vds',
-  codexCommand: 'codex-vpn',
+  codexCommand: 'codex',
   projects: [],
   quickPrompts: [],
   validationErrors: []
@@ -369,6 +405,7 @@ let currentSettings = {
     left: true,
     right: true
   },
+  onboardingSeen: false,
   syncAgentInstructions: true,
   agentInstructions: DEFAULT_AGENT_INSTRUCTIONS,
   quickCommandSets: DEFAULT_QUICK_COMMAND_SETS.map((item) => ({ ...item }))
@@ -579,6 +616,7 @@ function applySettings(settings) {
     theme: settings.theme === 'light' ? 'light' : 'dark',
     accentColor: normalizeAccentColor(settings.accentColor),
     panels: normalizePanelSettings(settings.panels),
+    onboardingSeen: settings.onboardingSeen === true,
     syncAgentInstructions: settings.syncAgentInstructions !== false,
     agentInstructions: normalizeAgentInstructions(settings.agentInstructions),
     quickCommandSets: normalizeQuickItems(settings.quickCommandSets, DEFAULT_QUICK_COMMAND_SETS)
@@ -587,6 +625,7 @@ function applySettings(settings) {
   document.body.dataset.theme = currentSettings.theme;
   document.body.dataset.accent = currentSettings.accentColor;
   terminal.options.theme = buildTerminalTheme(currentSettings);
+  appVersionLabel.textContent = DISPLAY_VERSION;
   languageSelect.value = currentSettings.language;
   themeSelect.value = currentSettings.theme;
   syncAgentInstructions.checked = currentSettings.syncAgentInstructions;
@@ -746,9 +785,12 @@ function renderProjectList() {
 function renderConfigSummary() {
   configPath.textContent = appConfig.path || '';
   footerAlias.textContent = appConfig.sshAlias || 'my-vds';
-  footerCommand.textContent = appConfig.codexCommand || 'codex-vpn';
+  footerCommand.textContent = appConfig.codexCommand || 'codex';
   activeSshAlias.textContent = `ssh ${appConfig.sshAlias || 'my-vds'}`;
-  activeCommand.textContent = appConfig.codexCommand || 'codex-vpn';
+  activeCommand.textContent = appConfig.codexCommand || 'codex';
+  codexCommandHelp.textContent = appConfig.codexCommand === 'codex-vpn'
+    ? t('codexCommandHelpVpn')
+    : t('codexCommandHelpCodex');
 
   const errors = Array.isArray(appConfig.validationErrors) ? appConfig.validationErrors : [];
   configErrors.textContent = errors.length > 0 ? errors.join(' ') : t('configLoaded');
@@ -1141,25 +1183,23 @@ function renderQuickItems(container, items, kind) {
 
     row.append(mainButton);
 
-    if (kind === 'command') {
-      const editButton = document.createElement('button');
-      editButton.type = 'button';
-      editButton.className = 'mini-button quick-action-button';
-      editButton.textContent = '✎';
-      editButton.title = t('editPrompt');
-      editButton.setAttribute('aria-label', `${t('editPrompt')} ${item.title}`);
-      editButton.addEventListener('click', () => openQuickItemEditor(index));
+    const editButton = document.createElement('button');
+    editButton.type = 'button';
+    editButton.className = 'mini-button quick-action-button';
+    editButton.textContent = '✎';
+    editButton.title = t('editPrompt');
+    editButton.setAttribute('aria-label', `${t('editPrompt')} ${item.title}`);
+    editButton.addEventListener('click', () => openQuickItemEditor(kind, index));
 
-      const deleteButton = document.createElement('button');
-      deleteButton.type = 'button';
-      deleteButton.className = 'mini-button quick-action-button danger';
-      deleteButton.textContent = '×';
-      deleteButton.title = t('deletePrompt');
-      deleteButton.setAttribute('aria-label', `${t('deletePrompt')} ${item.title}`);
-      deleteButton.addEventListener('click', () => deleteQuickCommandSet(index));
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'mini-button quick-action-button danger';
+    deleteButton.textContent = '×';
+    deleteButton.title = t('deletePrompt');
+    deleteButton.setAttribute('aria-label', `${t('deletePrompt')} ${item.title}`);
+    deleteButton.addEventListener('click', () => deleteQuickItem(kind, index));
 
-      row.append(editButton, deleteButton);
-    }
+    row.append(editButton, deleteButton);
 
     container.appendChild(row);
   });
@@ -1170,13 +1210,17 @@ function renderQuickLists() {
   renderQuickItems(quickCommandSets, currentSettings.quickCommandSets, 'command');
 }
 
-function openQuickItemEditor(index = -1) {
-  const item = index >= 0 ? currentSettings.quickCommandSets[index] : null;
-  quickItemEditor = { index };
-  quickItemDialogTitle.textContent = item ? t('editQuickCommandSetDialog') : t('addQuickCommandSetDialog');
+function openQuickItemEditor(kind = 'command', index = -1) {
+  const isPrompt = kind === 'prompt';
+  const source = isPrompt ? appConfig.quickPrompts || [] : currentSettings.quickCommandSets;
+  const item = index >= 0 ? source[index] : null;
+  quickItemEditor = { kind, index };
+  quickItemDialogTitle.textContent = item
+    ? t(isPrompt ? 'editQuickPromptDialog' : 'editQuickCommandSetDialog')
+    : t(isPrompt ? 'addQuickPromptDialog' : 'addQuickCommandSetDialog');
   quickItemTitle.value = item?.title || '';
   quickItemText.value = item?.text || '';
-  quickItemText.placeholder = t('commandSetPlaceholder');
+  quickItemText.placeholder = t(isPrompt ? 'quickPromptPlaceholder' : 'commandSetPlaceholder');
   quickItemDialog.showModal();
   quickItemTitle.focus();
 }
@@ -1187,7 +1231,7 @@ function closeQuickItemEditor() {
   quickItemDialog.close();
 }
 
-function saveQuickItem(event) {
+async function saveQuickItem(event) {
   event.preventDefault();
 
   if (!quickItemEditor) {
@@ -1202,7 +1246,8 @@ function saveQuickItem(event) {
     return;
   }
 
-  const items = [...currentSettings.quickCommandSets];
+  const isPrompt = quickItemEditor.kind === 'prompt';
+  const items = isPrompt ? [...(appConfig.quickPrompts || [])] : [...currentSettings.quickCommandSets];
   const normalizedItem = makeQuickItem(title, text);
 
   if (quickItemEditor.index >= 0) {
@@ -1212,18 +1257,32 @@ function saveQuickItem(event) {
     items.push(normalizedItem);
   }
 
-  currentSettings = {
-    ...currentSettings,
-    quickCommandSets: items
-  };
+  if (isPrompt) {
+    try {
+      const result = await api.saveQuickPrompts(items);
+      if (result.ok && result.config) {
+        appConfig = result.config;
+      }
+    } catch (error) {
+      writeLocal(activeProjectId, `\r\n[quick prompts] ${t('statusError')}: ${error.message || String(error)}\r\n`);
+      return;
+    }
+  } else {
+    currentSettings = {
+      ...currentSettings,
+      quickCommandSets: items
+    };
+    saveSettingsSoon();
+  }
 
   renderQuickLists();
-  saveSettingsSoon();
   closeQuickItemEditor();
 }
 
-function deleteQuickCommandSet(index) {
-  const item = currentSettings.quickCommandSets[index];
+async function deleteQuickItem(kind, index) {
+  const isPrompt = kind === 'prompt';
+  const source = isPrompt ? appConfig.quickPrompts || [] : currentSettings.quickCommandSets;
+  const item = source[index];
 
   if (!item) {
     return;
@@ -1237,13 +1296,27 @@ function deleteQuickCommandSet(index) {
     return;
   }
 
-  currentSettings = {
-    ...currentSettings,
-    quickCommandSets: currentSettings.quickCommandSets.filter((_entry, entryIndex) => entryIndex !== index)
-  };
+  const nextItems = source.filter((_entry, entryIndex) => entryIndex !== index);
+
+  if (isPrompt) {
+    try {
+      const result = await api.saveQuickPrompts(nextItems);
+      if (result.ok && result.config) {
+        appConfig = result.config;
+      }
+    } catch (error) {
+      writeLocal(activeProjectId, `\r\n[quick prompts] ${t('statusError')}: ${error.message || String(error)}\r\n`);
+      return;
+    }
+  } else {
+    currentSettings = {
+      ...currentSettings,
+      quickCommandSets: nextItems
+    };
+    saveSettingsSoon();
+  }
 
   renderQuickLists();
-  saveSettingsSoon();
 }
 
 async function clearSavedHistory() {
@@ -1316,6 +1389,107 @@ async function copySshConfigExample() {
   const example = await api.getSshConfigExample();
   api.writeClipboardText(example);
   writeLocal(activeProjectId, `\r\n[ssh] ${t('sshExampleCopied')}\r\n`);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function setupGuideMarkup({ welcome = false } = {}) {
+  const alias = escapeHtml(appConfig.sshAlias || 'my-vds');
+  const configFile = escapeHtml(appConfig.path || 'config.json');
+  const command = escapeHtml(appConfig.codexCommand || 'codex');
+
+  if (currentSettings.language === 'en') {
+    return `
+      <section class="guide-hero">
+        <img src="./assets/app-icon.png" alt="">
+        <div>
+          <h3>${welcome ? 'Welcome to the developer beta' : 'Connect your VDS'}</h3>
+          <p>Set up a normal OpenSSH alias once, then launch Codex on the server from this app.</p>
+        </div>
+      </section>
+      <section class="guide-grid">
+        <article><strong>Left panel</strong><span>Projects, sessions, config, customization, AGENTS.md.</span></article>
+        <article><strong>Center</strong><span>Embedded terminal and session controls.</span></article>
+        <article><strong>Right panel</strong><span>Server checks, diagnostics, quick prompts, quick commands.</span></article>
+      </section>
+      <ol class="guide-steps">
+        <li><strong>Create or pick an SSH key.</strong><code>ssh-keygen -t ed25519 -f ~/.ssh/my_vds_key</code></li>
+        <li><strong>Add the public key to your VDS.</strong><code>ssh-copy-id -i ~/.ssh/my_vds_key.pub root@YOUR_SERVER_IP</code></li>
+        <li><strong>Add an alias to ~/.ssh/config.</strong><pre>Host ${alias}
+    HostName YOUR_SERVER_IP
+    User root
+    IdentityFile ~/.ssh/my_vds_key
+    IdentitiesOnly yes
+    PreferredAuthentications publickey
+    PasswordAuthentication no
+    ServerAliveInterval 30
+    ServerAliveCountMax 3</pre></li>
+        <li><strong>Test it in Terminal.</strong><code>ssh ${alias}</code></li>
+        <li><strong>Open ${configFile}.</strong><span>Set <code>sshAlias</code> to <code>${alias}</code>, choose <code>${command}</code>, and add project paths like <code>/opt/app</code>.</span></li>
+        <li><strong>About codex-vpn.</strong><span>Use plain <code>codex</code> by default. Choose <code>codex-vpn</code> only if you created that wrapper on your VDS yourself.</span></li>
+        <li><strong>Reload config and start a session.</strong><span>Use the play button in the top toolbar or the project start button.</span></li>
+      </ol>
+    `;
+  }
+
+  return `
+    <section class="guide-hero">
+      <img src="./assets/app-icon.png" alt="">
+      <div>
+        <h3>${welcome ? 'Добро пожаловать в developer beta' : 'Подключение к своему VDS'}</h3>
+        <p>Один раз настройте обычный OpenSSH alias, а затем запускайте Codex на сервере из приложения.</p>
+      </div>
+    </section>
+    <section class="guide-grid">
+      <article><strong>Левая панель</strong><span>Проекты, сессии, конфиг, кастомизация, AGENTS.md.</span></article>
+      <article><strong>Центр</strong><span>Встроенный терминал и кнопки управления сессией.</span></article>
+      <article><strong>Правая панель</strong><span>Проверки сервера, диагностика, быстрые промпты и команды.</span></article>
+    </section>
+    <ol class="guide-steps">
+      <li><strong>Создайте или выберите SSH-ключ.</strong><code>ssh-keygen -t ed25519 -f ~/.ssh/my_vds_key</code></li>
+      <li><strong>Добавьте публичный ключ на VDS.</strong><code>ssh-copy-id -i ~/.ssh/my_vds_key.pub root@YOUR_SERVER_IP</code></li>
+      <li><strong>Добавьте alias в ~/.ssh/config.</strong><pre>Host ${alias}
+    HostName YOUR_SERVER_IP
+    User root
+    IdentityFile ~/.ssh/my_vds_key
+    IdentitiesOnly yes
+    PreferredAuthentications publickey
+    PasswordAuthentication no
+    ServerAliveInterval 30
+    ServerAliveCountMax 3</pre></li>
+      <li><strong>Проверьте подключение в Terminal.</strong><code>ssh ${alias}</code></li>
+      <li><strong>Откройте ${configFile}.</strong><span>Укажите <code>sshAlias</code> как <code>${alias}</code>, выберите <code>${command}</code> и добавьте пути проектов вроде <code>/opt/app</code>.</span></li>
+      <li><strong>Про codex-vpn.</strong><span>По умолчанию используйте обычный <code>codex</code>. Выбирайте <code>codex-vpn</code> только если сами создали такую обёртку на VDS.</span></li>
+      <li><strong>Перезагрузите config и запустите сессию.</strong><span>Используйте кнопку запуска в верхней панели или кнопку старта у проекта.</span></li>
+    </ol>
+  `;
+}
+
+function openSetupGuide({ welcome = false } = {}) {
+  setupGuideKicker.textContent = RELEASE_NAME;
+  setupGuideTitle.textContent = currentSettings.language === 'en'
+    ? (welcome ? 'First launch guide' : 'VDS connection guide')
+    : (welcome ? 'Первый запуск' : 'Инструкция подключения к VDS');
+  setupGuideContent.innerHTML = setupGuideMarkup({ welcome });
+  setupGuideDialog.showModal();
+}
+
+function closeSetupGuide({ markSeen = false } = {}) {
+  if (markSeen) {
+    currentSettings = {
+      ...currentSettings,
+      onboardingSeen: true
+    };
+    saveSettingsSoon();
+  }
+
+  setupGuideDialog.close();
 }
 
 function applyConfig(config) {
@@ -1420,8 +1594,9 @@ clearHistoryButton.addEventListener('click', clearSavedHistory);
 openConfigButton.addEventListener('click', openConfigFile);
 reloadConfigButton.addEventListener('click', reloadConfig);
 copySshConfigButton.addEventListener('click', copySshConfigExample);
-addQuickPromptButton.addEventListener('click', openConfigFile);
-addQuickCommandSetButton.addEventListener('click', () => openQuickItemEditor());
+openSetupGuideButton.addEventListener('click', () => openSetupGuide());
+addQuickPromptButton.addEventListener('click', () => openQuickItemEditor('prompt'));
+addQuickCommandSetButton.addEventListener('click', () => openQuickItemEditor('command'));
 languageSelect.addEventListener('change', () => {
   currentSettings = {
     ...currentSettings,
@@ -1468,6 +1643,17 @@ syncAgentInstructions.addEventListener('change', () => {
   saveSettingsSoon();
 });
 runMarkdownButton.addEventListener('click', selectAndRunMarkdownInstruction);
+closeSetupGuideButton.addEventListener('click', () => closeSetupGuide({ markSeen: true }));
+finishSetupGuideButton.addEventListener('click', () => closeSetupGuide({ markSeen: true }));
+copyGuideSshConfigButton.addEventListener('click', copySshConfigExample);
+openGuideConfigButton.addEventListener('click', openConfigFile);
+setupGuideDialog.addEventListener('cancel', () => {
+  currentSettings = {
+    ...currentSettings,
+    onboardingSeen: true
+  };
+  saveSettingsSoon();
+});
 markdownDropZone.addEventListener('dragover', (event) => {
   event.preventDefault();
   markdownDropZone.classList.add('drag-over');
@@ -1530,6 +1716,27 @@ api.onConfigChanged(({ config, history }) => {
   updateControls();
 });
 
+api.onUiCommand(({ command }) => {
+  const actions = {
+    'show-welcome': () => openSetupGuide({ welcome: true }),
+    'show-setup-guide': () => openSetupGuide(),
+    'open-config': openConfigFile,
+    'reload-config': reloadConfig,
+    'copy-ssh-config': copySshConfigExample,
+    'run-ssh-check': () => runCheck('ssh'),
+    'start-session': () => startSession(),
+    'stop-session': () => stopSession(),
+    'restart-session': () => restartSession(),
+    'open-external': openExternalTerminal,
+    'clear-terminal': clearActiveTerminal,
+    'clear-history': clearSavedHistory,
+    'toggle-left-panel': () => toggleLeftPanelButton.click(),
+    'toggle-right-panel': () => toggleRightPanelButton.click()
+  };
+
+  actions[command]?.();
+});
+
 async function initialize() {
   try {
     applyConfig(await api.loadConfig());
@@ -1553,6 +1760,9 @@ async function initialize() {
   updateControls();
   renderActiveBuffer();
   await renderSshSetupStatus();
+  if (!currentSettings.onboardingSeen) {
+    window.setTimeout(() => openSetupGuide({ welcome: true }), 180);
+  }
   window.setTimeout(fitAndResize, 100);
 }
 

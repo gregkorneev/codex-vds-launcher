@@ -1,22 +1,30 @@
 {
   "name": "codex-vds-launcher",
-  "version": "1.1.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "Desktop launcher for running Codex CLI on your VDS over SSH",
-  "desktopName": "Codex VDS Launcher",
+  "desktopName": "Codex VDS Launcher Beta",
+  "displayVersion": "1 - beta 2 (1 - beta 2)",
+  "releaseName": "Codex VDS Launcher Developer Beta 2",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
     "dist": "electron-builder --publish never",
-    "check": "node --check src/main.js && node --check src/preload.js && node --check src/renderer/app.js"
+    "check": "node --check src/main.js && node --check src/preload.js && node --check src/renderer/app.js",
+    "license:summary": "license-checker --summary",
+    "license:prod": "license-checker --production"
   },
   "build": {
     "appId": "app.codex-vds.launcher",
-    "productName": "Codex VDS Launcher",
+    "productName": "Codex VDS Launcher Beta",
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "files": [
       "src/**/*",
+      "docs/**/*",
+      "LICENSE",
+      "NOTICE.md",
+      "THIRD_PARTY_NOTICES.md",
       "package.json"
     ],
     "directories": {
@@ -70,7 +78,8 @@
   "devDependencies": {
     "@electron/rebuild": "^4.1.0",
     "electron": "^43.0.0",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "license-checker": "^25.0.1"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",

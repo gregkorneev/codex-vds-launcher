@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('codexVdsLauncher', {
   openConfigFile: () => ipcRenderer.invoke('config:openFile'),
   reloadConfig: () => ipcRenderer.invoke('config:reload'),
   getSshConfigExample: () => ipcRenderer.invoke('config:sshExample'),
+  saveQuickPrompts: (quickPrompts) => ipcRenderer.invoke('config:saveQuickPrompts', quickPrompts),
   getSshSetupStatus: () => ipcRenderer.invoke('ssh:setupStatus'),
   runDiagnostic: (checkId, projectId) => ipcRenderer.invoke('diagnostic:run', checkId, projectId),
   terminalStart: (projectId) => ipcRenderer.invoke('terminal:start', projectId),
@@ -43,5 +44,10 @@ contextBridge.exposeInMainWorld('codexVdsLauncher', {
     const listener = (_event, payload) => callback(payload);
     ipcRenderer.on('config:changed', listener);
     return () => ipcRenderer.removeListener('config:changed', listener);
+  },
+  onUiCommand: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on('ui:command', listener);
+    return () => ipcRenderer.removeListener('ui:command', listener);
   }
 });

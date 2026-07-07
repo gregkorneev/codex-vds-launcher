@@ -43,7 +43,7 @@ On first launch the app creates `config.json` in Electron user data. Use **Open 
 ```json
 {
   "sshAlias": "my-vds",
-  "codexCommand": "codex-vpn",
+  "codexCommand": "codex",
   "projects": [
     {
       "id": "root",
@@ -66,9 +66,9 @@ On first launch the app creates `config.json` in Electron user data. Use **Open 
 }
 ```
 
-### Language And Appearance
+### Language And Customization
 
-Use the language selector in the sidebar to switch between Russian and English. Open **Appearance** to choose light/dark theme and one of the accent colors.
+Open **Customization** to switch between Russian and English, choose light/dark theme, and pick one of the accent colors.
 
 These preferences are stored locally in `codex-settings.json`.
 
@@ -88,6 +88,8 @@ History is stored by `project.id`. If a project is later removed from `config.js
 
 ### Choose codex Or codex-vpn
 
+Use plain `codex` unless you have intentionally created a `codex-vpn` wrapper on the VDS.
+
 Set:
 
 ```json
@@ -100,14 +102,14 @@ or:
 "codexCommand": "codex-vpn"
 ```
 
-Other values are rejected.
+Other values are rejected. `codex-vpn` is not installed by this app and is not required for normal use.
 
 ### Start A Session
 
 Select a project and press the play button. The remote launch command is built from validated config values:
 
 ```bash
-ssh -tt -o BatchMode=yes -o ConnectTimeout=15 my-vds "cd /opt/app && codex-vpn"
+ssh -tt -o BatchMode=yes -o ConnectTimeout=15 my-vds "cd /opt/app && codex"
 ```
 
 If AGENTS sync is enabled, the app updates `AGENTS.md` before starting Codex. It will not overwrite an existing file unless it contains:
@@ -118,7 +120,7 @@ If AGENTS sync is enabled, the app updates `AGENTS.md` before starting Codex. It
 
 ### Quick Prompts
 
-Quick prompts are read from `config.json`. Press a prompt to insert it into the active Codex session.
+Quick prompts are editable in the app and stored in `config.json`. Press a prompt to insert it into the active Codex session.
 
 ### Markdown Instructions
 
@@ -179,7 +181,7 @@ ssh my-vds
 ```json
 {
   "sshAlias": "my-vds",
-  "codexCommand": "codex-vpn",
+  "codexCommand": "codex",
   "projects": [
     {
       "id": "root",
@@ -202,9 +204,9 @@ ssh my-vds
 }
 ```
 
-### Язык и оформление
+### Язык и кастомизация
 
-В боковой панели есть переключатель языка: русский и английский. В раскрываемом блоке **Оформление** можно выбрать светлую/тёмную тему и акцентный цвет.
+Откройте **Кастомизация**, чтобы переключить язык: русский или английский, выбрать светлую/тёмную тему и акцентный цвет.
 
 Эти настройки хранятся локально в `codex-settings.json`.
 
@@ -224,6 +226,8 @@ ssh my-vds
 
 ### Выбор codex или codex-vpn
 
+Используйте обычный `codex`, если вы специально не создали на VDS обёртку `codex-vpn`.
+
 Укажите:
 
 ```json
@@ -236,14 +240,14 @@ ssh my-vds
 "codexCommand": "codex-vpn"
 ```
 
-Другие значения отклоняются.
+Другие значения отклоняются. `codex-vpn` не устанавливается этим приложением и не нужен для обычного использования.
 
 ### Запуск сессии
 
 Выберите проект и нажмите кнопку запуска. Удалённая команда строится из валидированных значений:
 
 ```bash
-ssh -tt -o BatchMode=yes -o ConnectTimeout=15 my-vds "cd /opt/app && codex-vpn"
+ssh -tt -o BatchMode=yes -o ConnectTimeout=15 my-vds "cd /opt/app && codex"
 ```
 
 Если синхронизация AGENTS включена, приложение обновляет `AGENTS.md` перед запуском Codex. Существующий файл не будет перезаписан, если в нём нет маркера:
@@ -254,7 +258,7 @@ ssh -tt -o BatchMode=yes -o ConnectTimeout=15 my-vds "cd /opt/app && codex-vpn"
 
 ### Быстрые промпты
 
-Быстрые промпты читаются из `config.json`. Нажмите промпт, чтобы вставить его в активную Codex-сессию.
+Быстрые промпты редактируются в приложении и сохраняются в `config.json`. Нажмите промпт, чтобы вставить его в активную Codex-сессию.
 
 ### Markdown-инструкции
 

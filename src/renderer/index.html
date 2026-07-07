@@ -12,7 +12,7 @@
     <main class="app-shell">
       <aside class="sidebar" aria-label="Навигация Codex VDS Launcher" data-i18n-attr="aria-label:navLabel">
         <header class="brand">
-          <div class="brand-mark neutral-mark" aria-hidden="true">CV</div>
+          <img class="brand-mark" src="./assets/app-icon.png" alt="" aria-hidden="true">
           <div>
             <h1>Codex VDS Launcher</h1>
             <p data-i18n="brandSubtitle">SSH launcher for Codex CLI</p>
@@ -29,28 +29,28 @@
           <div class="session-list" id="sessionList"></div>
         </section>
 
-        <section class="sidebar-section">
-          <h2 data-i18n="config">Конфиг</h2>
-          <div class="settings-list">
+        <details class="sidebar-section disclosure-section" open>
+          <summary data-i18n="vdsConfiguration">Конфигурация VDS</summary>
+          <div class="settings-list disclosure-content">
             <p class="config-path" id="configPath"></p>
             <p class="config-status" id="configErrors" data-i18n="configLoading">config.json загружается</p>
+            <p class="config-help" id="codexCommandHelp"></p>
             <button type="button" class="secondary-button full-width-button" id="openConfigFile" data-i18n="openConfig">Open config file</button>
             <button type="button" class="secondary-button full-width-button" id="reloadConfig" data-i18n="reloadConfig">Reload config</button>
             <button type="button" class="secondary-button full-width-button" id="copySshConfig" data-i18n="copySshConfig">Copy SSH config example</button>
+            <button type="button" class="secondary-button full-width-button" id="openSetupGuide" data-i18n="openSetupGuide">Инструкция подключения</button>
           </div>
-        </section>
-
-        <section class="sidebar-section">
-          <label class="field-label" for="languageSelect" data-i18n="language">Язык</label>
-          <select class="select-control" id="languageSelect">
-            <option value="ru">Русский</option>
-            <option value="en">English</option>
-          </select>
-        </section>
+        </details>
 
         <details class="sidebar-section disclosure-section" open>
-          <summary data-i18n="appearance">Оформление</summary>
+          <summary data-i18n="customization">Кастомизация</summary>
           <div class="settings-list disclosure-content">
+            <label class="field-label" for="languageSelect" data-i18n="language">Язык</label>
+            <select class="select-control" id="languageSelect">
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+            </select>
+
             <label class="field-label" for="themeSelect" data-i18n="theme">Тема</label>
             <select class="select-control" id="themeSelect">
               <option value="dark" data-i18n="themeDark">Тёмная</option>
@@ -72,6 +72,7 @@
               <span data-i18n="syncAgents">Синхронизировать AGENTS.md</span>
             </label>
             <button type="button" class="secondary-button full-width-button" id="editAgentInstructions" data-i18n="configureAgents">Настроить AGENTS.md</button>
+            <p class="version-note"><span data-i18n="versionLabel">Версия</span> <strong id="appVersionLabel">1 - beta 2 (1 - beta 2)</strong></p>
           </div>
         </details>
 
@@ -91,7 +92,7 @@
           <div class="meta-strip" aria-label="Параметры сессии" data-i18n-attr="aria-label:sessionParams">
             <span id="activePath">/</span>
             <span id="activeSshAlias">ssh my-vds</span>
-            <span id="activeCommand">codex-vpn</span>
+            <span id="activeCommand">codex</span>
           </div>
           <div class="toolbar" aria-label="Управление терминалом" data-i18n-attr="aria-label:terminalControls">
             <button type="button" class="tool-button primary" id="startSession" title="Запустить сессию" aria-label="Запустить сессию" data-i18n-attr="title:startSession;aria-label:startSession">▶</button>
@@ -109,13 +110,10 @@
       </section>
 
       <aside class="right-panel" aria-label="Статусы и быстрые промпты" data-i18n-attr="aria-label:rightPanelLabel">
-        <section class="panel-section">
-          <header class="panel-heading">
-            <h2 data-i18n="serverStatus">Статус сервера</h2>
-          </header>
-
-          <div class="status-list" id="statusCards"></div>
-        </section>
+        <details class="panel-section disclosure-section panel-disclosure" open>
+          <summary data-i18n="serverStatus">Статус сервера</summary>
+          <div class="status-list disclosure-content" id="statusCards"></div>
+        </details>
 
         <section class="panel-section">
           <header class="panel-heading">
@@ -137,7 +135,7 @@
         <section class="panel-section">
           <header class="panel-heading">
             <h2 data-i18n="quickPrompts">Быстрые промпты</h2>
-            <button type="button" class="mini-button add-button" id="addQuickPrompt" title="Редактировать в config.json" aria-label="Редактировать быстрые промпты в config.json" data-i18n-attr="title:editPromptsInConfig;aria-label:editPromptsInConfig">＋</button>
+            <button type="button" class="mini-button add-button" id="addQuickPrompt" title="Добавить быстрый промпт" aria-label="Добавить быстрый промпт" data-i18n-attr="title:addQuickPrompt;aria-label:addQuickPrompt">＋</button>
           </header>
           <div class="prompt-list" id="quickPrompts"></div>
         </section>
@@ -190,12 +188,32 @@
       </form>
     </dialog>
 
+    <dialog class="item-dialog guide-dialog" id="setupGuideDialog">
+      <form class="dialog-card guide-card" method="dialog">
+        <header class="dialog-heading">
+          <div>
+            <p class="dialog-kicker" id="setupGuideKicker">Codex VDS Launcher Developer Beta 2</p>
+            <h2 id="setupGuideTitle">Настройка подключения к VDS</h2>
+          </div>
+          <button type="button" class="mini-button" id="closeSetupGuide" title="Закрыть" aria-label="Закрыть" data-i18n-attr="title:close;aria-label:close">×</button>
+        </header>
+
+        <div class="guide-content" id="setupGuideContent"></div>
+
+        <footer class="dialog-actions">
+          <button type="button" class="secondary-button" id="copyGuideSshConfig" data-i18n="copySshConfig">Скопировать пример SSH config</button>
+          <button type="button" class="secondary-button" id="openGuideConfig" data-i18n="openConfig">Открыть config file</button>
+          <button type="button" class="primary-button" id="finishSetupGuide" data-i18n="startUsing">Начать работу</button>
+        </footer>
+      </form>
+    </dialog>
+
     <footer class="status-bar">
       <span><span data-i18n="sshAlias">SSH alias</span>: <strong id="footerAlias">my-vds</strong></span>
       <span><span data-i18n="activeProject">Активный проект</span>: <strong id="footerProject">Server root</strong></span>
       <span><span data-i18n="sessionStatus">Статус сессии</span>: <strong id="footerStatus">неактивна</strong></span>
       <span><span data-i18n="historyStatus">История</span>: <strong id="historyStatus">загрузка</strong></span>
-      <span>Codex: <strong id="footerCommand">codex-vpn</strong></span>
+      <span>Codex: <strong id="footerCommand">codex</strong></span>
       <span data-i18n="noSecrets">Секреты не хранятся</span>
     </footer>
 
