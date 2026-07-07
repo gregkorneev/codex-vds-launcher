@@ -1,4 +1,4 @@
-name: Retag Developer Beta 1
+name: Cleanup Old Beta 1 Release
 
 on:
   push:
@@ -11,34 +11,16 @@ permissions:
   contents: write
 
 jobs:
-  retag-beta1:
-    name: Move Developer Beta 1 release tag
+  cleanup-old-beta1:
+    name: Delete old v1.1.0-beta.1 release
     runs-on: ubuntu-latest
     steps:
-      - name: Retag release
+      - name: Delete old release
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          BETA1_SHA: 1004d6f8e7b1bc5f5945f3963b42e8ed283f245d
-          RELEASE_ID: '350453267'
+          OLD_RELEASE_ID: '350453267'
         run: |
-          set -euo pipefail
-
-          if gh api "repos/${REPO}/git/ref/tags/v1.0.0-beta.1" >/dev/null 2>&1; then
-            gh api -X PATCH "repos/${REPO}/git/refs/tags/v1.0.0-beta.1" \
-              -f sha="${BETA1_SHA}" \
-              -F force=true
-          else
-            gh api -X POST "repos/${REPO}/git/refs" \
-              -f ref="refs/tags/v1.0.0-beta.1" \
-              -f sha="${BETA1_SHA}"
-          fi
-
-          gh api -X PATCH "repos/${REPO}/releases/${RELEASE_ID}" \
-            -f tag_name="v1.0.0-beta.1" \
-            -f target_commitish="${BETA1_SHA}" \
-            -f name="Codex VDS Launcher Developer Beta 1" \
-            -F prerelease=true \
-            -F draft=false
-
+          gh release delete v1.1.0-beta.1 --yes --cleanup-tag || true
+          gh api -X DELETE "repos/${REPO}/releases/${OLD_RELEASE_ID}" || true
           gh api -X DELETE "repos/${REPO}/git/refs/tags/v1.1.0-beta.1" || true
