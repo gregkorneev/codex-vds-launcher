@@ -1,8 +1,12 @@
-# Usage
+# Usage / Использование
+
+Русский раздел находится ниже: [Русский](#русский).
+
+## English
 
 Codex VDS Launcher is currently intended for local macOS development and manual testing from source.
 
-## Install And Run From Source
+### Install And Run From Source
 
 ```bash
 npm install
@@ -10,9 +14,7 @@ npm run check
 npm start
 ```
 
-If Electron starts successfully, configure the app from the left sidebar.
-
-## Configure SSH Alias
+### Configure SSH Alias
 
 Create or edit `~/.ssh/config` yourself. The app only checks whether the alias exists; it does not create access, keys, or passwords.
 
@@ -34,9 +36,7 @@ Verify access before starting a Codex session:
 ssh my-vds
 ```
 
-The app always uses `BatchMode=yes`, so SSH password prompts are disabled.
-
-## Configure config.json
+### Configure config.json
 
 On first launch the app creates `config.json` in Electron user data. Use **Open config file** to edit it and **Reload config** to apply changes without restarting.
 
@@ -66,15 +66,13 @@ On first launch the app creates `config.json` in Electron user data. Use **Open 
 }
 ```
 
-Validation:
+### Language And Appearance
 
-- `sshAlias`: letters, digits, dot, underscore, or dash.
-- `codexCommand`: only `codex` or `codex-vpn`.
-- `projects[].id`: letters, digits, underscore, or dash.
-- `projects[].name`: non-empty.
-- `projects[].path`: absolute Unix path beginning with `/`.
+Use the language selector in the sidebar to switch between Russian and English. Open **Appearance** to choose light/dark theme and one of the accent colors.
 
-## Add Projects
+These preferences are stored locally in `codex-settings.json`.
+
+### Add Projects
 
 Add entries to `projects`:
 
@@ -88,7 +86,7 @@ Add entries to `projects`:
 
 History is stored by `project.id`. If a project is later removed from `config.json`, old history is ignored rather than crashing the app.
 
-## Choose codex Or codex-vpn
+### Choose codex Or codex-vpn
 
 Set:
 
@@ -104,7 +102,7 @@ or:
 
 Other values are rejected.
 
-## Start A Session
+### Start A Session
 
 Select a project and press the play button. The remote launch command is built from validated config values:
 
@@ -118,51 +116,160 @@ If AGENTS sync is enabled, the app updates `AGENTS.md` before starting Codex. It
 <!-- Managed by Codex VDS Launcher -->
 ```
 
-## Quick Prompts
+### Quick Prompts
 
 Quick prompts are read from `config.json`. Press a prompt to insert it into the active Codex session.
 
-Default prompts include project map, Git status, plan before changes, Docker overview, server health, and safe production check.
+### Markdown Instructions
 
-## Quick Commands
-
-Quick command sets are local UI conveniences saved in app settings. They are sent only to the active terminal session.
-
-## Markdown Instructions
-
-Use **Выполнить Markdown** or drag a `.md` / `.markdown` file into the drop zone. The app reads the local file and pastes its content into the active Codex session. The remote server never receives local filesystem access.
+Use **Run Markdown** or drag a `.md` / `.markdown` file into the drop zone. The app reads the local file and pastes its content into the active Codex session. The remote server never receives local filesystem access.
 
 Maximum file size is 256 KB.
 
-## Clear History
+### Diagnostics
 
-Use **Очистить историю** in the left sidebar. Local terminal buffers for all projects are removed.
+Diagnostics are read-only: SSH check, remote identity, command availability, server health, Git status, and Docker state.
 
-## Diagnostics
+### Troubleshooting
 
-Diagnostics are read-only:
+`OpenSSH client was not found`: install OpenSSH or ensure `ssh` is in `PATH`.
 
-- SSH check.
-- Remote `whoami`, `hostname`, `pwd`.
-- Codex command lookup.
-- VPN command lookup when `codex-vpn` is selected.
-- Server health: `uptime`, `df -h`, memory.
-- Git status for the current project.
-- Docker compose file listing and `docker ps` when Docker is available.
+`SSH alias was not found`: add the host block to `~/.ssh/config`, test `ssh my-vds`, then press **Reload config**.
 
-## Troubleshooting
+`Invalid codexCommand`: use only `codex` or `codex-vpn`.
 
-`OpenSSH client was not found`:
-Install OpenSSH or ensure `ssh` is in `PATH`.
+## Русский
 
-`SSH alias was not found`:
-Add the host block to `~/.ssh/config`, test `ssh my-vds`, then press **Reload config**.
+Codex VDS Launcher сейчас рассчитан на локальную разработку под macOS и ручное тестирование из исходников.
 
-`Invalid codexCommand`:
-Use only `codex` or `codex-vpn`.
+### Установка и запуск из исходников
 
-`Some projects were ignored`:
-Check that each project has a valid `id`, non-empty `name`, and absolute Unix `path`.
+```bash
+npm install
+npm run check
+npm start
+```
 
-Codex session exits immediately:
-Run `ssh my-vds` manually and check whether `codex` or `codex-vpn` is installed on the server.
+### Настройка SSH alias
+
+Создайте или отредактируйте `~/.ssh/config` самостоятельно. Приложение только проверяет наличие alias; оно не создаёт доступ, ключи или пароли.
+
+```sshconfig
+Host my-vds
+    HostName YOUR_SERVER_IP
+    User root
+    IdentityFile ~/.ssh/my_vds_key
+    IdentitiesOnly yes
+    PreferredAuthentications publickey
+    PasswordAuthentication no
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+```
+
+Проверьте доступ перед запуском Codex-сессии:
+
+```bash
+ssh my-vds
+```
+
+### Настройка config.json
+
+При первом запуске приложение создаёт `config.json` в Electron user data. Используйте **Open config file** для редактирования и **Reload config** для применения без перезапуска.
+
+```json
+{
+  "sshAlias": "my-vds",
+  "codexCommand": "codex-vpn",
+  "projects": [
+    {
+      "id": "root",
+      "name": "Server root",
+      "path": "/"
+    },
+    {
+      "id": "app",
+      "name": "App",
+      "path": "/opt/app"
+    }
+  ],
+  "quickPrompts": [
+    {
+      "id": "project-map",
+      "title": "Project map",
+      "text": "Analyze this repository and show a concise project map. Do not modify files."
+    }
+  ]
+}
+```
+
+### Язык и оформление
+
+В боковой панели есть переключатель языка: русский и английский. В раскрываемом блоке **Оформление** можно выбрать светлую/тёмную тему и акцентный цвет.
+
+Эти настройки хранятся локально в `codex-settings.json`.
+
+### Добавление проектов
+
+Добавьте записи в `projects`:
+
+```json
+{
+  "id": "api",
+  "name": "API",
+  "path": "/opt/api"
+}
+```
+
+История хранится по `project.id`. Если проект позже удалить из `config.json`, старая история игнорируется, а приложение не падает.
+
+### Выбор codex или codex-vpn
+
+Укажите:
+
+```json
+"codexCommand": "codex"
+```
+
+или:
+
+```json
+"codexCommand": "codex-vpn"
+```
+
+Другие значения отклоняются.
+
+### Запуск сессии
+
+Выберите проект и нажмите кнопку запуска. Удалённая команда строится из валидированных значений:
+
+```bash
+ssh -tt -o BatchMode=yes -o ConnectTimeout=15 my-vds "cd /opt/app && codex-vpn"
+```
+
+Если синхронизация AGENTS включена, приложение обновляет `AGENTS.md` перед запуском Codex. Существующий файл не будет перезаписан, если в нём нет маркера:
+
+```html
+<!-- Managed by Codex VDS Launcher -->
+```
+
+### Быстрые промпты
+
+Быстрые промпты читаются из `config.json`. Нажмите промпт, чтобы вставить его в активную Codex-сессию.
+
+### Markdown-инструкции
+
+Используйте **Run Markdown** или перетащите `.md` / `.markdown` файл в drop zone. Приложение читает локальный файл и вставляет его содержимое в активную Codex-сессию. Удалённый сервер не получает доступ к локальной файловой системе.
+
+Максимальный размер файла — 256 KB.
+
+### Диагностика
+
+Диагностика read-only: SSH check, удалённая идентичность, наличие команд, здоровье сервера, Git status и состояние Docker.
+
+### Troubleshooting
+
+`OpenSSH client was not found`: установите OpenSSH или добавьте `ssh` в `PATH`.
+
+`SSH alias was not found`: добавьте host block в `~/.ssh/config`, проверьте `ssh my-vds`, затем нажмите **Reload config**.
+
+`Invalid codexCommand`: используйте только `codex` или `codex-vpn`.

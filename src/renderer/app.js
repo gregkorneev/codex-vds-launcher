@@ -1,37 +1,37 @@
 const DIAGNOSTICS = [
   {
     id: 'ssh',
-    label: 'SSH check',
+    labelKey: 'diagSsh',
     target: 'card'
   },
   {
     id: 'remote-info',
-    label: 'Remote whoami/hostname/pwd',
+    labelKey: 'diagRemoteInfo',
     target: 'card'
   },
   {
     id: 'codex-command',
-    label: 'Codex command check',
+    labelKey: 'diagCodexCommand',
     target: 'card'
   },
   {
     id: 'vpn-command',
-    label: 'VPN command check',
+    labelKey: 'diagVpnCommand',
     target: 'card'
   },
   {
     id: 'server-health',
-    label: 'Server health',
+    labelKey: 'diagServerHealth',
     target: 'terminal'
   },
   {
     id: 'git-status',
-    label: 'Git status current project',
+    labelKey: 'diagGitStatus',
     target: 'terminal'
   },
   {
     id: 'docker-compose',
-    label: 'Docker compose check',
+    labelKey: 'diagDockerCompose',
     target: 'terminal'
   }
 ];
@@ -64,22 +64,215 @@ const DEFAULT_AGENT_INSTRUCTIONS = [
   '- Write release notes only when the user asks for them.'
 ].join('\n');
 
-const STATUS_TEXT = {
-  active: 'активна',
-  inactive: 'неактивна',
-  loading: 'загрузка',
-  ok: 'ок',
-  error: 'ошибка',
-  unknown: 'неизвестно'
-};
-
-const HISTORY_TEXT = {
-  saved: 'сохранена',
-  saving: 'сохранение',
-  error: 'ошибка',
-  new: 'новая',
-  loaded: 'загружена',
-  empty: 'пусто'
+const TRANSLATIONS = {
+  ru: {
+    navLabel: 'Навигация Codex VDS Launcher',
+    brandSubtitle: 'SSH-лаунчер для Codex CLI',
+    projects: 'Проекты',
+    sessions: 'Сессии',
+    config: 'Конфиг',
+    configLoading: 'config.json загружается',
+    configLoaded: 'config.json загружен',
+    openConfig: 'Открыть config file',
+    reloadConfig: 'Перезагрузить config',
+    copySshConfig: 'Скопировать пример SSH config',
+    language: 'Язык',
+    appearance: 'Оформление',
+    theme: 'Тема',
+    themeDark: 'Тёмная',
+    themeLight: 'Светлая',
+    accentColor: 'Акцентный цвет',
+    syncAgents: 'Синхронизировать AGENTS.md',
+    configureAgents: 'Настроить AGENTS.md',
+    history: 'История',
+    clearHistory: 'Очистить историю',
+    clearHistoryTitle: 'Очистить сохранённую историю',
+    activeSession: 'Активная сессия',
+    sessionParams: 'Параметры сессии',
+    terminalControls: 'Управление терминалом',
+    startSession: 'Запустить сессию',
+    stopSession: 'Остановить сессию',
+    restartSession: 'Перезапустить сессию',
+    clearTerminal: 'Очистить терминал',
+    openExternal: 'Открыть внешний терминал',
+    embeddedTerminal: 'Встроенный терминал Codex',
+    rightPanelLabel: 'Статусы и быстрые промпты',
+    serverStatus: 'Статус сервера',
+    diagnostics: 'Диагностика',
+    localMd: 'Локальные MD',
+    runMarkdown: 'Выполнить Markdown',
+    dropMarkdown: 'Перетащите .md сюда',
+    quickPrompts: 'Быстрые промпты',
+    quickCommands: 'Быстрые команды',
+    editPromptsInConfig: 'Редактировать быстрые промпты в config.json',
+    addCommandSet: 'Добавить набор команд',
+    close: 'Закрыть',
+    title: 'Название',
+    text: 'Текст',
+    cancel: 'Отмена',
+    save: 'Сохранить',
+    reset: 'Сбросить',
+    codexInstructions: 'Инструкции для Codex',
+    sshAlias: 'SSH alias',
+    activeProject: 'Активный проект',
+    sessionStatus: 'Статус сессии',
+    historyStatus: 'История',
+    noSecrets: 'Секреты не хранятся',
+    statusActive: 'активна',
+    statusInactive: 'неактивна',
+    statusLoading: 'загрузка',
+    statusOk: 'ок',
+    statusError: 'ошибка',
+    statusUnknown: 'неизвестно',
+    historySaved: 'сохранена',
+    historySaving: 'сохранение',
+    historyError: 'ошибка',
+    historyNew: 'новая',
+    historyLoaded: 'загружена',
+    historyEmpty: 'пусто',
+    noData: 'Нет данных.',
+    noOutput: 'Нет вывода.',
+    running: 'Выполняется...',
+    readOnlyRunning: 'Выполняется read-only проверка...',
+    diagSsh: 'SSH check',
+    diagRemoteInfo: 'Remote whoami/hostname/pwd',
+    diagCodexCommand: 'Проверка команды Codex',
+    diagVpnCommand: 'Проверка команды VPN',
+    diagServerHealth: 'Здоровье сервера',
+    diagGitStatus: 'Git status текущего проекта',
+    diagDockerCompose: 'Docker compose check',
+    launchProject: 'Запустить',
+    readyPrefix: 'Готово. Запустите',
+    readySuffix: 'чтобы открыть Codex CLI через',
+    startSessionLog: 'Запуск',
+    startFailed: 'Ошибка запуска',
+    sessionStopped: 'остановлена',
+    sessionExited: 'Завершена с кодом',
+    signal: 'сигнал',
+    unknownError: 'неизвестная ошибка',
+    unknown: 'неизвестно',
+    insertStartFirst: 'Сначала запустите сессию.',
+    mdNoPath: 'Не удалось получить локальный путь файла. Используйте кнопку выбора Markdown.',
+    mdStartFirst: 'Запустите сессию, чтобы отправить инструкции из',
+    mdSent: 'Отправлены инструкции из',
+    configReloaded: 'config.json перезагружен.',
+    configReloadFailed: 'Не удалось перезагрузить config',
+    configOpenFailed: 'Не удалось открыть config.json',
+    sshExampleCopied: 'Пример SSH config скопирован в буфер обмена.',
+    sshNotReady: 'SSH alias не готов.',
+    sshUseExample: 'Используйте “Copy SSH config example”, добавьте блок в ~/.ssh/config и перезагрузите config.',
+    addQuickCommandSetDialog: 'Добавить набор команд',
+    editQuickCommandSetDialog: 'Изменить набор команд',
+    commandSetPlaceholder: 'Команды, которые будут отправлены в активную консоль',
+    deletePrompt: 'Удалить',
+    editPrompt: 'Изменить',
+    localMarkdownInstruction: 'Выполни инструкции из локального Markdown-файла пользователя.',
+    localMarkdownNoFs: 'Удалённый сервер не имеет доступа к локальной файловой системе. Используй только содержимое ниже.'
+  },
+  en: {
+    navLabel: 'Codex VDS Launcher navigation',
+    brandSubtitle: 'SSH launcher for Codex CLI',
+    projects: 'Projects',
+    sessions: 'Sessions',
+    config: 'Config',
+    configLoading: 'Loading config.json',
+    configLoaded: 'config.json loaded',
+    openConfig: 'Open config file',
+    reloadConfig: 'Reload config',
+    copySshConfig: 'Copy SSH config example',
+    language: 'Language',
+    appearance: 'Appearance',
+    theme: 'Theme',
+    themeDark: 'Dark',
+    themeLight: 'Light',
+    accentColor: 'Accent color',
+    syncAgents: 'Sync AGENTS.md',
+    configureAgents: 'Configure AGENTS.md',
+    history: 'History',
+    clearHistory: 'Clear history',
+    clearHistoryTitle: 'Clear saved history',
+    activeSession: 'Active session',
+    sessionParams: 'Session parameters',
+    terminalControls: 'Terminal controls',
+    startSession: 'Start session',
+    stopSession: 'Stop session',
+    restartSession: 'Restart session',
+    clearTerminal: 'Clear terminal',
+    openExternal: 'Open external terminal',
+    embeddedTerminal: 'Embedded Codex terminal',
+    rightPanelLabel: 'Status and quick prompts',
+    serverStatus: 'Server status',
+    diagnostics: 'Diagnostics',
+    localMd: 'Local MD',
+    runMarkdown: 'Run Markdown',
+    dropMarkdown: 'Drop .md here',
+    quickPrompts: 'Quick prompts',
+    quickCommands: 'Quick commands',
+    editPromptsInConfig: 'Edit quick prompts in config.json',
+    addCommandSet: 'Add command set',
+    close: 'Close',
+    title: 'Title',
+    text: 'Text',
+    cancel: 'Cancel',
+    save: 'Save',
+    reset: 'Reset',
+    codexInstructions: 'Instructions for Codex',
+    sshAlias: 'SSH alias',
+    activeProject: 'Active project',
+    sessionStatus: 'Session status',
+    historyStatus: 'History',
+    noSecrets: 'Secrets are not stored',
+    statusActive: 'active',
+    statusInactive: 'inactive',
+    statusLoading: 'loading',
+    statusOk: 'ok',
+    statusError: 'error',
+    statusUnknown: 'unknown',
+    historySaved: 'saved',
+    historySaving: 'saving',
+    historyError: 'error',
+    historyNew: 'new',
+    historyLoaded: 'loaded',
+    historyEmpty: 'empty',
+    noData: 'No data.',
+    noOutput: 'No output.',
+    running: 'Running...',
+    readOnlyRunning: 'Running read-only check...',
+    diagSsh: 'SSH check',
+    diagRemoteInfo: 'Remote whoami/hostname/pwd',
+    diagCodexCommand: 'Codex command check',
+    diagVpnCommand: 'VPN command check',
+    diagServerHealth: 'Server health',
+    diagGitStatus: 'Git status current project',
+    diagDockerCompose: 'Docker compose check',
+    launchProject: 'Start',
+    readyPrefix: 'Ready. Start',
+    readySuffix: 'to open Codex CLI through',
+    startSessionLog: 'Starting',
+    startFailed: 'Start failed',
+    sessionStopped: 'stopped',
+    sessionExited: 'Exited with code',
+    signal: 'signal',
+    unknownError: 'unknown error',
+    unknown: 'unknown',
+    insertStartFirst: 'Start a session first.',
+    mdNoPath: 'Could not get a local file path. Use the Markdown picker button.',
+    mdStartFirst: 'Start a session to send instructions from',
+    mdSent: 'Sent instructions from',
+    configReloaded: 'config.json reloaded.',
+    configReloadFailed: 'Reload failed',
+    configOpenFailed: 'Could not open config.json',
+    sshExampleCopied: 'SSH config example copied to clipboard.',
+    sshNotReady: 'SSH alias is not ready.',
+    sshUseExample: 'Use “Copy SSH config example”, add it to ~/.ssh/config, then reload config.',
+    addQuickCommandSetDialog: 'Add command set',
+    editQuickCommandSetDialog: 'Edit command set',
+    commandSetPlaceholder: 'Commands that will be sent to the active terminal',
+    deletePrompt: 'Delete',
+    editPrompt: 'Edit',
+    localMarkdownInstruction: 'Run the instructions from the user selected local Markdown file.',
+    localMarkdownNoFs: 'The remote server cannot access the local file system. Use only the content pasted below.'
+  }
 };
 
 const api = window.codexVdsLauncher;
@@ -107,7 +300,9 @@ const restartSessionButton = document.querySelector('#restartSession');
 const clearTerminalButton = document.querySelector('#clearTerminal');
 const openExternalButton = document.querySelector('#openExternal');
 const clearHistoryButton = document.querySelector('#clearHistory');
+const languageSelect = document.querySelector('#languageSelect');
 const themeSelect = document.querySelector('#themeSelect');
+const accentPicker = document.querySelector('#accentPicker');
 const syncAgentInstructions = document.querySelector('#syncAgentInstructions');
 const editAgentInstructionsButton = document.querySelector('#editAgentInstructions');
 const agentInstructionsDialog = document.querySelector('#agentInstructionsDialog');
@@ -167,7 +362,9 @@ let quickItemEditor = null;
 let sshStatusRendered = false;
 
 let currentSettings = {
+  language: 'ru',
   theme: 'dark',
+  accentColor: 'blue',
   panels: {
     left: true,
     right: true
@@ -181,6 +378,60 @@ const sessionsByProject = {};
 const targetBySession = new Map();
 const stoppingSessions = new Set();
 const buffersByProject = {};
+
+function t(key) {
+  const language = currentSettings.language === 'en' ? 'en' : 'ru';
+  return TRANSLATIONS[language][key] || TRANSLATIONS.ru[key] || key;
+}
+
+function statusText(state) {
+  const keys = {
+    active: 'statusActive',
+    inactive: 'statusInactive',
+    loading: 'statusLoading',
+    ok: 'statusOk',
+    error: 'statusError',
+    unknown: 'statusUnknown'
+  };
+  return t(keys[state] || 'statusUnknown');
+}
+
+function historyText(state) {
+  const keys = {
+    saved: 'historySaved',
+    saving: 'historySaving',
+    error: 'historyError',
+    new: 'historyNew',
+    loaded: 'historyLoaded',
+    empty: 'historyEmpty'
+  };
+  return t(keys[state] || 'historyError');
+}
+
+function applyI18n() {
+  const language = currentSettings.language === 'en' ? 'en' : 'ru';
+  document.documentElement.lang = language;
+
+  document.querySelectorAll('[data-i18n]').forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+
+  document.querySelectorAll('[data-i18n-attr]').forEach((element) => {
+    element.dataset.i18nAttr.split(';').forEach((entry) => {
+      const [attribute, key] = entry.split(':');
+      if (attribute && key) {
+        element.setAttribute(attribute, t(key));
+      }
+    });
+  });
+
+  updatePanelToggle(toggleLeftPanelButton, 'left', currentSettings.panels.left);
+  updatePanelToggle(toggleRightPanelButton, 'right', currentSettings.panels.right);
+  renderConfigSummary();
+  renderDiagnostics();
+  renderQuickLists();
+  updateControls();
+}
 
 function getProjects() {
   return Array.isArray(appConfig.projects) ? appConfig.projects : [];
@@ -202,7 +453,7 @@ function ensureProjectState(projectId) {
   if (!Object.prototype.hasOwnProperty.call(buffersByProject, projectId)) {
     const project = getProject(projectId);
     buffersByProject[projectId] = project
-      ? `Ready. Start ${project.name} to open Codex CLI through ssh ${appConfig.sshAlias} and ${appConfig.codexCommand}.\r\n`
+      ? `${t('readyPrefix')} ${project.name} ${t('readySuffix')} ssh ${appConfig.sshAlias} / ${appConfig.codexCommand}.\r\n`
       : '';
   }
 }
@@ -263,17 +514,35 @@ function normalizePanelSettings(value = {}) {
   };
 }
 
+function normalizeLanguage(value) {
+  return value === 'en' ? 'en' : 'ru';
+}
+
+function normalizeAccentColor(value) {
+  return ['blue', 'cyan', 'emerald', 'violet', 'rose', 'amber'].includes(value) ? value : 'blue';
+}
+
 function normalizeAgentInstructions(value) {
   const text = typeof value === 'string' ? value.trim() : '';
   return text ? text.slice(0, 24000) : DEFAULT_AGENT_INSTRUCTIONS;
 }
 
 function buildTerminalTheme(settings) {
+  const accentMap = {
+    blue: '#38bdf8',
+    cyan: '#22d3ee',
+    emerald: '#34d399',
+    violet: '#a78bfa',
+    rose: '#fb7185',
+    amber: '#fbbf24'
+  };
+  const cursor = accentMap[settings.accentColor] || accentMap.blue;
+
   if (settings.theme === 'light') {
     return {
       background: '#f8fafc',
       foreground: '#0f172a',
-      cursor: '#0284c7',
+      cursor,
       selectionBackground: '#bae6fd'
     };
   }
@@ -281,13 +550,16 @@ function buildTerminalTheme(settings) {
   return {
     background: '#07111f',
     foreground: '#dce7f2',
-    cursor: '#38bdf8',
+    cursor,
     selectionBackground: '#334155'
   };
 }
 
 function updatePanelToggle(button, side, visible) {
-  const label = visible ? `Скрыть ${side} панель` : `Показать ${side} панель`;
+  const isLeft = side === 'left';
+  const label = currentSettings.language === 'en'
+    ? `${visible ? 'Hide' : 'Show'} ${isLeft ? 'left' : 'right'} panel`
+    : `${visible ? 'Скрыть' : 'Показать'} ${isLeft ? 'левую' : 'правую'} панель`;
   button.title = label;
   button.setAttribute('aria-label', label);
   button.setAttribute('aria-pressed', String(!visible));
@@ -296,14 +568,16 @@ function updatePanelToggle(button, side, visible) {
 function applyPanelVisibility() {
   document.body.classList.toggle('left-panel-hidden', !currentSettings.panels.left);
   document.body.classList.toggle('right-panel-hidden', !currentSettings.panels.right);
-  updatePanelToggle(toggleLeftPanelButton, 'левую', currentSettings.panels.left);
-  updatePanelToggle(toggleRightPanelButton, 'правую', currentSettings.panels.right);
+  updatePanelToggle(toggleLeftPanelButton, 'left', currentSettings.panels.left);
+  updatePanelToggle(toggleRightPanelButton, 'right', currentSettings.panels.right);
   scheduleFit();
 }
 
 function applySettings(settings) {
   currentSettings = {
+    language: normalizeLanguage(settings.language),
     theme: settings.theme === 'light' ? 'light' : 'dark',
+    accentColor: normalizeAccentColor(settings.accentColor),
     panels: normalizePanelSettings(settings.panels),
     syncAgentInstructions: settings.syncAgentInstructions !== false,
     agentInstructions: normalizeAgentInstructions(settings.agentInstructions),
@@ -311,10 +585,18 @@ function applySettings(settings) {
   };
 
   document.body.dataset.theme = currentSettings.theme;
+  document.body.dataset.accent = currentSettings.accentColor;
   terminal.options.theme = buildTerminalTheme(currentSettings);
+  languageSelect.value = currentSettings.language;
   themeSelect.value = currentSettings.theme;
   syncAgentInstructions.checked = currentSettings.syncAgentInstructions;
+  document.querySelectorAll('.accent-swatch').forEach((button) => {
+    const active = button.dataset.accent === currentSettings.accentColor;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
   applyPanelVisibility();
+  applyI18n();
 }
 
 function saveSettingsSoon() {
@@ -336,14 +618,14 @@ async function saveHistoryNow() {
 
   try {
     await api.saveHistory(historyPayload());
-    historyStatus.textContent = HISTORY_TEXT.saved;
+    historyStatus.textContent = historyText('saved');
   } catch (_error) {
-    historyStatus.textContent = HISTORY_TEXT.error;
+    historyStatus.textContent = historyText('error');
   }
 }
 
 function saveHistorySoon() {
-  historyStatus.textContent = HISTORY_TEXT.saving;
+  historyStatus.textContent = historyText('saving');
   window.clearTimeout(saveHistoryTimer);
   saveHistoryTimer = window.setTimeout(saveHistoryNow, 350);
 }
@@ -354,7 +636,7 @@ function applyHistory(history, { emptyAllowed = false } = {}) {
   const hasSavedText = buffers && Object.values(buffers).some((value) => typeof value === 'string' && value.length > 0);
 
   if (!emptyAllowed && !history?.updatedAt && !hasSavedText) {
-    historyStatus.textContent = HISTORY_TEXT.new;
+    historyStatus.textContent = historyText('new');
     return;
   }
 
@@ -368,7 +650,7 @@ function applyHistory(history, { emptyAllowed = false } = {}) {
     activeProjectId = history.activeTargetId;
   }
 
-  historyStatus.textContent = hasSavedText ? HISTORY_TEXT.loaded : HISTORY_TEXT.empty;
+  historyStatus.textContent = hasSavedText ? historyText('loaded') : historyText('empty');
 }
 
 function clampBuffer(projectId) {
@@ -433,15 +715,15 @@ function renderProjectList() {
     const startButton = document.createElement('button');
     startButton.type = 'button';
     startButton.className = 'icon-button project-start';
-    startButton.title = `Запустить ${project.name}`;
-    startButton.setAttribute('aria-label', `Запустить ${project.name}`);
+    startButton.title = `${t('launchProject')} ${project.name}`;
+    startButton.setAttribute('aria-label', `${t('launchProject')} ${project.name}`);
     startButton.textContent = '▶';
     startButton.addEventListener('click', () => startSession(project.id));
 
     const state = document.createElement('span');
     state.className = 'project-state';
     state.dataset.stateTarget = project.id;
-    state.textContent = STATUS_TEXT[sessionStatus(project.id)];
+    state.textContent = statusText(sessionStatus(project.id));
 
     row.append(text, startButton, state);
     projectList.appendChild(row);
@@ -469,7 +751,7 @@ function renderConfigSummary() {
   activeCommand.textContent = appConfig.codexCommand || 'codex-vpn';
 
   const errors = Array.isArray(appConfig.validationErrors) ? appConfig.validationErrors : [];
-  configErrors.textContent = errors.length > 0 ? errors.join(' ') : 'config.json загружен';
+  configErrors.textContent = errors.length > 0 ? errors.join(' ') : t('configLoaded');
   configErrors.classList.toggle('error-text', errors.length > 0);
 }
 
@@ -479,18 +761,19 @@ function renderDiagnostics() {
 
   DIAGNOSTICS.forEach((check) => {
     if (check.target === 'card') {
+      const label = t(check.labelKey);
       const card = document.createElement('article');
       card.className = 'status-card';
       card.dataset.checkCard = check.id;
       card.innerHTML = [
         '<div class="status-card-top">',
         '<div>',
-        `<strong>${check.label}</strong>`,
-        '<span class="status-label unknown">неизвестно</span>',
+        `<strong>${label}</strong>`,
+        `<span class="status-label unknown">${statusText('unknown')}</span>`,
         '</div>',
-        `<button type="button" class="mini-button" data-check="${check.id}" title="Обновить ${check.label}" aria-label="Обновить ${check.label}">↻</button>`,
+        `<button type="button" class="mini-button" data-check="${check.id}" title="${t('reloadConfig')} ${label}" aria-label="${t('reloadConfig')} ${label}">↻</button>`,
         '</div>',
-        '<pre class="status-output">Нет данных.</pre>'
+        `<pre class="status-output">${t('noData')}</pre>`
       ].join('');
       statusCards.appendChild(card);
     } else {
@@ -498,7 +781,7 @@ function renderDiagnostics() {
       button.type = 'button';
       button.className = 'diagnostic-button';
       button.dataset.check = check.id;
-      button.textContent = check.label;
+      button.textContent = t(check.labelKey);
       diagnosticActions.appendChild(button);
     }
   });
@@ -519,7 +802,7 @@ function updateControls() {
   activeTitle.textContent = activeProject.name;
   activePath.textContent = activeProject.path;
   footerProject.textContent = activeProject.name;
-  footerStatus.textContent = STATUS_TEXT[sessionStatus(activeProject.id)];
+  footerStatus.textContent = statusText(sessionStatus(activeProject.id));
   startSessionButton.disabled = hasSession;
   stopSessionButton.disabled = !hasSession;
   restartSessionButton.disabled = false;
@@ -532,7 +815,7 @@ function updateControls() {
   });
 
   document.querySelectorAll('[data-state-target]').forEach((state) => {
-    state.textContent = STATUS_TEXT[sessionStatus(state.dataset.stateTarget)];
+    state.textContent = statusText(sessionStatus(state.dataset.stateTarget));
   });
 
   document.querySelectorAll('.session-chip').forEach((chip) => {
@@ -568,7 +851,7 @@ function formatResult(result) {
     parts.push(`error:\n${result.error}`);
   }
 
-  return parts.length > 0 ? parts.join('\n\n') : 'No output.';
+  return parts.length > 0 ? parts.join('\n\n') : t('noOutput');
 }
 
 function setCheckState(checkId, state, output) {
@@ -581,8 +864,8 @@ function setCheckState(checkId, state, output) {
   const label = card.querySelector('.status-label');
   const outputElement = card.querySelector('.status-output');
   label.className = `status-label ${state}`;
-  label.textContent = STATUS_TEXT[state] || state;
-  outputElement.textContent = output || 'Нет данных.';
+  label.textContent = statusText(state) || state;
+  outputElement.textContent = output || t('noData');
 }
 
 async function runCheck(checkId) {
@@ -593,9 +876,9 @@ async function runCheck(checkId) {
   }
 
   if (check.target === 'terminal') {
-    writeLocal(activeProjectId, `\r\n[diagnostic] ${check.label}\r\nRunning read-only check...\r\n`);
+    writeLocal(activeProjectId, `\r\n[diagnostic] ${t(check.labelKey)}\r\n${t('readOnlyRunning')}\r\n`);
   } else {
-    setCheckState(checkId, 'loading', 'Выполняется...');
+    setCheckState(checkId, 'loading', t('running'));
   }
 
   try {
@@ -651,13 +934,13 @@ async function startSession(projectId = activeProjectId) {
   }
 
   switchProject(projectId);
-  writeLocal(projectId, `\r\n[session] Starting ${project.name} through ssh ${appConfig.sshAlias} / ${appConfig.codexCommand}...\r\n`);
+  writeLocal(projectId, `\r\n[session] ${t('startSessionLog')} ${project.name} through ssh ${appConfig.sshAlias} / ${appConfig.codexCommand}...\r\n`);
   updateControls();
 
   const result = await api.terminalStart(projectId);
 
   if (!result.ok) {
-    writeLocal(projectId, `[session] Start failed: ${result.error || 'unknown error'}\r\n`);
+    writeLocal(projectId, `[session] ${t('startFailed')}: ${result.error || t('unknownError')}\r\n`);
     updateControls();
     return;
   }
@@ -680,7 +963,7 @@ async function stopSession(projectId = activeProjectId) {
   await api.terminalStop(sessionId);
   sessionsByProject[projectId] = null;
   targetBySession.delete(sessionId);
-  writeLocal(projectId, `\r\n[session] ${project.name} stopped.\r\n`);
+  writeLocal(projectId, `\r\n[session] ${project.name} ${t('sessionStopped')}.\r\n`);
   updateControls();
 }
 
@@ -710,7 +993,7 @@ async function openExternalTerminal() {
   const result = await api.terminalOpenExternal(activeProjectId);
 
   if (!result.ok) {
-    writeLocal(activeProjectId, `\r\n[external terminal] Error: ${result.error || 'unknown error'}\r\n`);
+    writeLocal(activeProjectId, `\r\n[external terminal] ${t('statusError')}: ${result.error || t('unknownError')}\r\n`);
   }
 }
 
@@ -722,7 +1005,7 @@ function writeSessionText(text, { label, execute = false } = {}) {
   const sessionId = currentSessionId();
 
   if (!sessionId) {
-    writeLocal(activeProjectId, `\r\n[${label || 'insert'}] Start a session first.\r\n`);
+    writeLocal(activeProjectId, `\r\n[${label || 'insert'}] ${t('insertStartFirst')}\r\n`);
     return;
   }
 
@@ -750,10 +1033,10 @@ function insertCommandSet(commandText) {
 
 function buildMarkdownInstructionPrompt(file) {
   return [
-    'Run the instructions from the user selected local Markdown file.',
+    t('localMarkdownInstruction'),
     `File: ${file.fileName || 'instructions.md'}`,
     '',
-    'The remote server cannot access the local file system. Use only the content pasted below.',
+    t('localMarkdownNoFs'),
     '',
     '--- BEGIN LOCAL MARKDOWN ---',
     file.content || '',
@@ -764,13 +1047,13 @@ function buildMarkdownInstructionPrompt(file) {
 function runMarkdownInstruction(file) {
   if (!file?.ok) {
     if (file && !file.canceled) {
-      writeLocal(activeProjectId, `\r\n[md] Error: ${file.error || 'could not read file'}\r\n`);
+      writeLocal(activeProjectId, `\r\n[md] ${t('statusError')}: ${file.error || 'could not read file'}\r\n`);
     }
     return;
   }
 
   if (!currentSessionId()) {
-    writeLocal(activeProjectId, `\r\n[md] Start a session to send instructions from ${file.fileName}.\r\n`);
+    writeLocal(activeProjectId, `\r\n[md] ${t('mdStartFirst')} ${file.fileName}.\r\n`);
     return;
   }
 
@@ -778,27 +1061,27 @@ function runMarkdownInstruction(file) {
     label: 'local MD',
     execute: true
   });
-  writeLocal(activeProjectId, `\r\n[md] Sent instructions from ${file.fileName}.\r\n`);
+  writeLocal(activeProjectId, `\r\n[md] ${t('mdSent')} ${file.fileName}.\r\n`);
 }
 
 async function selectAndRunMarkdownInstruction() {
   try {
     runMarkdownInstruction(await api.selectMarkdownInstructionFile());
   } catch (error) {
-    writeLocal(activeProjectId, `\r\n[md] Error: ${error.message || String(error)}\r\n`);
+    writeLocal(activeProjectId, `\r\n[md] ${t('statusError')}: ${error.message || String(error)}\r\n`);
   }
 }
 
 async function readAndRunDroppedMarkdown(filePath) {
   if (!filePath) {
-    writeLocal(activeProjectId, '\r\n[md] Could not get a local file path. Use the Markdown picker button.\r\n');
+    writeLocal(activeProjectId, `\r\n[md] ${t('mdNoPath')}\r\n`);
     return;
   }
 
   try {
     runMarkdownInstruction(await api.readMarkdownInstructionFile(filePath));
   } catch (error) {
-    writeLocal(activeProjectId, `\r\n[md] Error: ${error.message || String(error)}\r\n`);
+    writeLocal(activeProjectId, `\r\n[md] ${t('statusError')}: ${error.message || String(error)}\r\n`);
   }
 }
 
@@ -863,16 +1146,16 @@ function renderQuickItems(container, items, kind) {
       editButton.type = 'button';
       editButton.className = 'mini-button quick-action-button';
       editButton.textContent = '✎';
-      editButton.title = 'Изменить';
-      editButton.setAttribute('aria-label', `Изменить ${item.title}`);
+      editButton.title = t('editPrompt');
+      editButton.setAttribute('aria-label', `${t('editPrompt')} ${item.title}`);
       editButton.addEventListener('click', () => openQuickItemEditor(index));
 
       const deleteButton = document.createElement('button');
       deleteButton.type = 'button';
       deleteButton.className = 'mini-button quick-action-button danger';
       deleteButton.textContent = '×';
-      deleteButton.title = 'Удалить';
-      deleteButton.setAttribute('aria-label', `Удалить ${item.title}`);
+      deleteButton.title = t('deletePrompt');
+      deleteButton.setAttribute('aria-label', `${t('deletePrompt')} ${item.title}`);
       deleteButton.addEventListener('click', () => deleteQuickCommandSet(index));
 
       row.append(editButton, deleteButton);
@@ -890,10 +1173,10 @@ function renderQuickLists() {
 function openQuickItemEditor(index = -1) {
   const item = index >= 0 ? currentSettings.quickCommandSets[index] : null;
   quickItemEditor = { index };
-  quickItemDialogTitle.textContent = `${item ? 'Изменить' : 'Добавить'} набор команд`;
+  quickItemDialogTitle.textContent = item ? t('editQuickCommandSetDialog') : t('addQuickCommandSetDialog');
   quickItemTitle.value = item?.title || '';
   quickItemText.value = item?.text || '';
-  quickItemText.placeholder = 'Команды, которые будут отправлены в активную консоль';
+  quickItemText.placeholder = t('commandSetPlaceholder');
   quickItemDialog.showModal();
   quickItemTitle.focus();
 }
@@ -942,7 +1225,15 @@ function saveQuickItem(event) {
 function deleteQuickCommandSet(index) {
   const item = currentSettings.quickCommandSets[index];
 
-  if (!item || !window.confirm(`Удалить "${item.title}"?`)) {
+  if (!item) {
+    return;
+  }
+
+  const confirmText = currentSettings.language === 'en'
+    ? `Delete "${item.title}"?`
+    : `Удалить "${item.title}"?`;
+
+  if (!window.confirm(confirmText)) {
     return;
   }
 
@@ -956,7 +1247,9 @@ function deleteQuickCommandSet(index) {
 }
 
 async function clearSavedHistory() {
-  const confirmed = window.confirm('Очистить сохранённую историю терминала для всех сессий?');
+  const confirmed = window.confirm(currentSettings.language === 'en'
+    ? 'Clear saved terminal history for all sessions?'
+    : 'Очистить сохранённую историю терминала для всех сессий?');
 
   if (!confirmed) {
     return;
@@ -984,11 +1277,11 @@ async function renderSshSetupStatus() {
     writeLocal(
       activeProjectId,
       [
-        '\r\n[ssh] SSH alias is not ready.',
+        `\r\n[ssh] ${t('sshNotReady')}`,
         `\r\n[ssh] Config: ${status.configPath}`,
         `\r\n[ssh] Alias: ${status.alias}`,
         status.error ? `\r\n[ssh] ${status.error}` : '',
-        '\r\n[ssh] Use "Copy SSH config example", add it to ~/.ssh/config, then reload config.\r\n'
+        `\r\n[ssh] ${t('sshUseExample')}\r\n`
       ].join('')
     );
   } catch (error) {
@@ -1000,7 +1293,7 @@ async function openConfigFile() {
   const result = await api.openConfigFile();
 
   if (!result.ok) {
-    writeLocal(activeProjectId, `\r\n[config] Could not open config.json: ${result.error || 'unknown error'}\r\n`);
+    writeLocal(activeProjectId, `\r\n[config] ${t('configOpenFailed')}: ${result.error || t('unknownError')}\r\n`);
   }
 }
 
@@ -1008,7 +1301,7 @@ async function reloadConfig() {
   const result = await api.reloadConfig();
 
   if (!result.ok) {
-    writeLocal(activeProjectId, `\r\n[config] Reload failed: ${result.error || 'unknown error'}\r\n`);
+    writeLocal(activeProjectId, `\r\n[config] ${t('configReloadFailed')}: ${result.error || t('unknownError')}\r\n`);
     return;
   }
 
@@ -1016,13 +1309,13 @@ async function reloadConfig() {
   applyHistory(result.history, { emptyAllowed: true });
   renderActiveBuffer();
   updateControls();
-  writeLocal(activeProjectId, '\r\n[config] config.json reloaded.\r\n');
+  writeLocal(activeProjectId, `\r\n[config] ${t('configReloaded')}\r\n`);
 }
 
 async function copySshConfigExample() {
   const example = await api.getSshConfigExample();
   api.writeClipboardText(example);
-  writeLocal(activeProjectId, '\r\n[ssh] SSH config example copied to clipboard.\r\n');
+  writeLocal(activeProjectId, `\r\n[ssh] ${t('sshExampleCopied')}\r\n`);
 }
 
 function applyConfig(config) {
@@ -1113,7 +1406,7 @@ api.onTerminalExit(({ sessionId, projectId, exitCode, signal }) => {
 
   writeLocal(
     knownProjectId,
-    `\r\n[session] Exited with code ${exitCode ?? 'unknown'}${signal ? `, signal ${signal}` : ''}.\r\n`
+    `\r\n[session] ${t('sessionExited')} ${exitCode ?? t('unknown')}${signal ? `, ${t('signal')} ${signal}` : ''}.\r\n`
   );
   updateControls();
 });
@@ -1129,6 +1422,14 @@ reloadConfigButton.addEventListener('click', reloadConfig);
 copySshConfigButton.addEventListener('click', copySshConfigExample);
 addQuickPromptButton.addEventListener('click', openConfigFile);
 addQuickCommandSetButton.addEventListener('click', () => openQuickItemEditor());
+languageSelect.addEventListener('change', () => {
+  currentSettings = {
+    ...currentSettings,
+    language: normalizeLanguage(languageSelect.value)
+  };
+  applySettings(currentSettings);
+  saveSettingsSoon();
+});
 toggleLeftPanelButton.addEventListener('click', () => {
   currentSettings = {
     ...currentSettings,
@@ -1196,6 +1497,20 @@ themeSelect.addEventListener('change', () => {
   applySettings(currentSettings);
   saveSettingsSoon();
 });
+accentPicker.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-accent]');
+
+  if (!button) {
+    return;
+  }
+
+  currentSettings = {
+    ...currentSettings,
+    accentColor: normalizeAccentColor(button.dataset.accent)
+  };
+  applySettings(currentSettings);
+  saveSettingsSoon();
+});
 window.addEventListener('resize', scheduleFit);
 window.addEventListener('beforeunload', () => {
   api.saveHistory(historyPayload()).catch(() => {});
@@ -1231,7 +1546,7 @@ async function initialize() {
   try {
     applyHistory(await api.loadHistory());
   } catch (_error) {
-    historyStatus.textContent = HISTORY_TEXT.error;
+    historyStatus.textContent = historyText("error");
   }
 
   renderQuickLists();

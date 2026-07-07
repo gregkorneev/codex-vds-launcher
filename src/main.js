@@ -380,11 +380,16 @@ function normalizeAgentInstructions(value) {
 
 function normalizeSettings(value = {}) {
   const theme = value.theme === 'light' ? 'light' : 'dark';
+  const language = value.language === 'en' ? 'en' : 'ru';
+  const allowedAccentColors = new Set(['blue', 'cyan', 'emerald', 'violet', 'rose', 'amber']);
+  const accentColor = allowedAccentColors.has(value.accentColor) ? value.accentColor : 'blue';
 
   return {
-    version: 4,
+    version: 5,
     updatedAt: typeof value.updatedAt === 'string' ? value.updatedAt : null,
+    language,
     theme,
+    accentColor,
     panels: normalizePanelSettings(value.panels),
     syncAgentInstructions: value.syncAgentInstructions !== false,
     agentInstructions: normalizeAgentInstructions(value.agentInstructions),

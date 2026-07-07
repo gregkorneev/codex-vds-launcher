@@ -40,6 +40,61 @@ body[data-theme="light"] {
   --ok: #047857;
 }
 
+body[data-accent="cyan"] {
+  --accent: #0891b2;
+  --accent-strong: #0e7490;
+  --accent-cyan: #22d3ee;
+  --accent-soft: rgba(8, 145, 178, 0.24);
+}
+
+body[data-accent="emerald"] {
+  --accent: #059669;
+  --accent-strong: #047857;
+  --accent-cyan: #34d399;
+  --accent-soft: rgba(5, 150, 105, 0.24);
+}
+
+body[data-accent="violet"] {
+  --accent: #7c3aed;
+  --accent-strong: #6d28d9;
+  --accent-cyan: #a78bfa;
+  --accent-soft: rgba(124, 58, 237, 0.24);
+}
+
+body[data-accent="rose"] {
+  --accent: #e11d48;
+  --accent-strong: #be123c;
+  --accent-cyan: #fb7185;
+  --accent-soft: rgba(225, 29, 72, 0.22);
+}
+
+body[data-accent="amber"] {
+  --accent: #d97706;
+  --accent-strong: #b45309;
+  --accent-cyan: #fbbf24;
+  --accent-soft: rgba(217, 119, 6, 0.22);
+}
+
+body[data-theme="light"][data-accent="cyan"] {
+  --accent-soft: rgba(8, 145, 178, 0.11);
+}
+
+body[data-theme="light"][data-accent="emerald"] {
+  --accent-soft: rgba(5, 150, 105, 0.11);
+}
+
+body[data-theme="light"][data-accent="violet"] {
+  --accent-soft: rgba(124, 58, 237, 0.11);
+}
+
+body[data-theme="light"][data-accent="rose"] {
+  --accent-soft: rgba(225, 29, 72, 0.1);
+}
+
+body[data-theme="light"][data-accent="amber"] {
+  --accent-soft: rgba(217, 119, 6, 0.11);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -161,8 +216,32 @@ body.right-panel-hidden .right-panel {
   padding-top: 16px;
 }
 
-.sidebar-section + .sidebar-section {
+.sidebar-section + .sidebar-section,
+.sidebar-section + .disclosure-section,
+.disclosure-section + .sidebar-section {
   margin-top: 18px;
+}
+
+.disclosure-section {
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  color: var(--text);
+}
+
+.disclosure-section summary {
+  margin-bottom: 10px;
+  color: var(--accent-cyan);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  list-style-position: outside;
+  text-transform: uppercase;
+}
+
+.disclosure-content {
+  padding-top: 2px;
 }
 
 .sidebar-section h2,
@@ -539,6 +618,31 @@ body[data-theme="light"] .tool-button.primary {
 .settings-list {
   display: grid;
   gap: 9px;
+}
+
+.accent-picker {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.accent-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 30px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--swatch);
+  cursor: pointer;
+}
+
+.accent-swatch.active {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px var(--accent), 0 0 0 5px var(--accent-soft);
+}
+
+body[data-theme="light"] .accent-swatch.active {
+  border-color: var(--text);
 }
 
 .config-path,

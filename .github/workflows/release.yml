@@ -1,0 +1,80 @@
+name: Developer Beta Release
+
+on:
+  push:
+    tags:
+      - 'v*-beta.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release-macos:
+    name: Build and publish macOS developer beta
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check sources
+        run: npm run check
+
+      - name: Build macOS app
+        run: npx electron-builder --mac dmg zip --publish never
+
+      - name: Publish GitHub pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Codex VDS Launcher Developer Beta 1
+          prerelease: true
+          draft: false
+          body: |
+            ## English
+
+            Developer Beta 1 for Codex VDS Launcher.
+
+            Highlights:
+            - Russian and English UI language switcher.
+            - Expandable Appearance panel.
+            - Light/dark theme selection.
+            - Accent color picker.
+            - Bilingual README and documentation.
+            - macOS-first developer beta build.
+
+            Notes:
+            - This is a pre-release for manual testing.
+            - The macOS app is ad-hoc signed and not notarized.
+            - Configure your own SSH alias in `~/.ssh/config` before starting sessions.
+
+            ## Русский
+
+            Developer Beta 1 для Codex VDS Launcher.
+
+            Главное:
+            - Переключатель языка интерфейса: русский и английский.
+            - Раскрываемая вкладка оформления.
+            - Выбор светлой/тёмной темы.
+            - Выбор акцентного цвета.
+            - README и документация на русском и английском.
+            - Developer beta сборка с фокусом на macOS.
+
+            Примечания:
+            - Это pre-release для ручного тестирования.
+            - macOS-приложение подписано ad-hoc и не notarized.
+            - Перед запуском сессий настройте свой SSH alias в `~/.ssh/config`.
+          files: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.blockmap
+            dist/latest-mac.yml
+          fail_on_unmatched_files: false
