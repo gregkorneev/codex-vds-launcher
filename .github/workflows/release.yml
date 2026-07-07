@@ -10,8 +10,8 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release-macos:
-    name: Build and publish macOS developer beta
+  build-and-release:
+    name: Build and publish developer beta
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -30,67 +30,53 @@ jobs:
         run: npm run check
 
       - name: Build macOS app
-        run: npx electron-builder --mac dmg zip --publish never
+        run: npm run dist:mac
 
-      - name: Normalize beta artifact names
-        run: |
-          for file in dist/Codex.VDS.Launcher.Beta-*; do
-            [ -e "$file" ] || continue
-            mv "$file" "${file/Codex.VDS.Launcher.Beta/Codex VDS Launcher Beta}"
-          done
+      - name: Build Windows app
+        run: npm run dist:win
 
       - name: Publish GitHub pre-release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_TITLE: Codex VDS Launcher Developer Beta 2
+          RELEASE_TITLE: Codex VDS Launcher Developer Beta 3
         run: |
           cat > release-notes.md <<'EOF'
             ## English
 
-            Developer Beta 2 for Codex VDS Launcher.
+            Developer Beta 3 for Codex VDS Launcher.
 
             Highlights:
-            - First-launch onboarding with a VDS connection guide.
-            - Reusable VDS setup guide inside the app.
-            - Custom macOS app menu and tray/menu bar icon.
-            - Dynamic macOS menu bar template icon behavior for light and dark menu bars.
-            - Updated app icon for the sidebar and packaged app.
-            - VDS Configuration and Server Status are now collapsible sections.
-            - The default Codex command is now plain `codex`; `codex-vpn` is documented as an optional custom wrapper.
-            - Quick prompts can now be added, edited, and deleted in the app.
-            - Language moved into Customization.
-            - Right panel spacing polish.
-            - MIT license, NOTICE attribution, third-party notices, and license audit scripts.
+            - Reduced empty spacing around collapsed sections in the sidebar and right panel.
+            - Diagnostics now use the same collapsible section pattern as Server Status.
+            - First-launch onboarding and help now explain how to install Codex CLI on a VDS and connect through the app.
+            - `codex-vpn` is documented as an optional custom wrapper, not something new users need.
+            - macOS release downloads now include only the `.dmg` installer.
+            - Windows x64 `.exe` installer is now built for the release.
 
             Notes:
             - This is a pre-release for manual testing.
             - The macOS app is ad-hoc signed and not notarized.
             - Configure your own SSH alias in `~/.ssh/config` before starting sessions.
-            - Pre-release artifacts are named Codex VDS Launcher Beta.
+            - Install Codex CLI on the VDS first, then keep `codexCommand` as `codex` for normal use.
 
             ## Русский
 
-            Developer Beta 2 для Codex VDS Launcher.
+            Developer Beta 3 для Codex VDS Launcher.
 
             Главное:
-            - Приветственный экран первого запуска с инструкцией подключения к VDS.
-            - Инструкция настройки VDS доступна повторно внутри приложения.
-            - Кастомное macOS-меню приложения и иконка menu bar/tray.
-            - Динамическое поведение macOS menu bar template icon для светлой и тёмной строки меню.
-            - Обновлённая иконка приложения в боковой панели и собранном пакете.
-            - «Конфигурация VDS» и «Статус сервера» стали раскрываемыми секциями.
-            - Команда Codex по умолчанию теперь обычная `codex`; `codex-vpn` описана как опциональная пользовательская обёртка.
-            - Быстрые промпты теперь можно добавлять, редактировать и удалять в приложении.
-            - Язык перенесён в раздел «Кастомизация».
-            - Исправлены отступы правой панели.
-            - Добавлены MIT license, NOTICE attribution, third-party notices и license audit scripts.
+            - Уменьшено пустое место вокруг свёрнутых секций в боковой и правой панели.
+            - «Диагностика» теперь оформлена как раскрывающаяся секция, как «Статус сервера».
+            - Приветственный экран и справка объясняют, как установить Codex CLI на VDS и подключиться через приложение.
+            - `codex-vpn` описан как необязательная пользовательская обёртка, а не обязательный путь для новых пользователей.
+            - Для macOS в релизных загрузках остаётся только `.dmg`.
+            - Для Windows теперь собирается x64 `.exe` installer.
 
             Примечания:
             - Это pre-release для ручного тестирования.
             - macOS-приложение подписано ad-hoc и не notarized.
             - Перед запуском сессий настройте свой SSH alias в `~/.ssh/config`.
-            - Pre-release артефакты называются Codex VDS Launcher Beta.
+            - Сначала установите Codex CLI на VDS, затем для обычной работы оставьте `codexCommand` равным `codex`.
           EOF
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
@@ -99,17 +85,11 @@ jobs:
             gh release create "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes-file release-notes.md --prerelease
           fi
 
-          for asset in $(gh release view "$RELEASE_TAG" --json assets -q '.assets[].name' | grep '^Codex\.VDS\.Launcher\.Beta-' || true); do
+          for asset in $(gh release view "$RELEASE_TAG" --json assets -q '.assets[].name' || true); do
             gh release delete-asset "$RELEASE_TAG" "$asset" -y || true
           done
 
-          gh release upload "$RELEASE_TAG" dist/*.dmg dist/*.zip dist/*.blockmap --clobber
-
-          gh release view "$RELEASE_TAG" --json assets -q '.assets[] | [.id, .name] | @tsv' | while IFS=$'\t' read -r asset_id asset_name; do
-            case "$asset_name" in
-              Codex.VDS.Launcher.Beta-*)
-                fixed_name="${asset_name/Codex.VDS.Launcher.Beta/Codex VDS Launcher Beta}"
-                gh api -X PATCH "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}" -f name="$fixed_name" -f label="$fixed_name" >/dev/null || true
-                ;;
-            esac
-          done
+          gh release upload "$RELEASE_TAG" \
+            "dist/Codex VDS Launcher Beta-1.0.0-beta.3-mac-"*.dmg \
+            "dist/Codex VDS Launcher Beta-1.0.0-beta.3-win-x64.exe" \
+            --clobber
