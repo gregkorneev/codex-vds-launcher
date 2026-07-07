@@ -4,7 +4,7 @@
 
 ## English
 
-Codex VDS Launcher is currently intended for local macOS development and manual testing from source.
+Codex VDS Launcher is currently intended for local macOS/Windows development and manual testing from source.
 
 ### Install And Run From Source
 
@@ -13,6 +13,19 @@ npm install
 npm run check
 npm start
 ```
+
+### Install Codex CLI On The VDS
+
+Connect to the server and install Codex CLI before using this launcher:
+
+```bash
+ssh root@YOUR_SERVER_IP
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+codex
+```
+
+The first `codex` run asks you to sign in with your ChatGPT account or an API
+key. After sign-in, the launcher can start the same `codex` command through SSH.
 
 ### Configure SSH Alias
 
@@ -88,7 +101,7 @@ History is stored by `project.id`. If a project is later removed from `config.js
 
 ### Choose codex Or codex-vpn
 
-Use plain `codex` unless you have intentionally created a `codex-vpn` wrapper on the VDS.
+Use plain `codex` unless you have intentionally created a `codex-vpn` wrapper on the VDS. `codex-vpn` is not part of Codex CLI and the app does not install it.
 
 Set:
 
@@ -142,7 +155,7 @@ Diagnostics are read-only: SSH check, remote identity, command availability, ser
 
 ## Русский
 
-Codex VDS Launcher сейчас рассчитан на локальную разработку под macOS и ручное тестирование из исходников.
+Codex VDS Launcher сейчас рассчитан на локальную разработку под macOS/Windows и ручное тестирование из исходников.
 
 ### Установка и запуск из исходников
 
@@ -151,6 +164,19 @@ npm install
 npm run check
 npm start
 ```
+
+### Установка Codex CLI на VDS
+
+Перед использованием launcher подключитесь к серверу и установите Codex CLI:
+
+```bash
+ssh root@YOUR_SERVER_IP
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+codex
+```
+
+Первый запуск `codex` попросит авторизоваться через ChatGPT account или API key.
+После авторизации launcher сможет запускать эту же команду `codex` через SSH.
 
 ### Настройка SSH alias
 
@@ -226,7 +252,7 @@ ssh my-vds
 
 ### Выбор codex или codex-vpn
 
-Используйте обычный `codex`, если вы специально не создали на VDS обёртку `codex-vpn`.
+Используйте обычный `codex`, если вы специально не создали на VDS обёртку `codex-vpn`. `codex-vpn` не является частью Codex CLI, и приложение его не устанавливает.
 
 Укажите:
 

@@ -8,7 +8,7 @@ const packageJson = require('../package.json');
 
 const APP_NAME = 'Codex VDS Launcher';
 const BETA_APP_NAME = 'Codex VDS Launcher Beta';
-const RELEASE_NAME = packageJson.releaseName || 'Codex VDS Launcher Developer Beta 2';
+const RELEASE_NAME = packageJson.releaseName || 'Codex VDS Launcher Developer Beta 3';
 const DISPLAY_VERSION = packageJson.displayVersion || packageJson.version;
 const SSH_CONNECT_TIMEOUT_SECONDS = 15;
 const DIAGNOSTIC_TIMEOUT_MS = 30000;

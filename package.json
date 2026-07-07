@@ -1,16 +1,18 @@
 {
   "name": "codex-vds-launcher",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "Desktop launcher for running Codex CLI on your VDS over SSH",
   "desktopName": "Codex VDS Launcher Beta",
-  "displayVersion": "1 - beta 2 (1 - beta 2)",
-  "releaseName": "Codex VDS Launcher Developer Beta 2",
+  "displayVersion": "1 - beta 3 (1 - beta 3)",
+  "releaseName": "Codex VDS Launcher Developer Beta 3",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
     "dist": "electron-builder --publish never",
+    "dist:mac": "electron-builder --mac dmg --publish never",
+    "dist:win": "electron-builder --win nsis --x64 --publish never -c.npmRebuild=false",
     "check": "node --check src/main.js && node --check src/preload.js && node --check src/renderer/app.js",
     "license:summary": "license-checker --summary",
     "license:prod": "license-checker --production"
@@ -38,15 +40,13 @@
       "icon": "build/icon.icns",
       "identity": "-",
       "target": [
-        "dmg",
-        "zip"
+        "dmg"
       ]
     },
     "win": {
       "icon": "build/icon.ico",
       "target": [
-        "nsis",
-        "squirrel"
+        "nsis"
       ]
     },
     "linux": {

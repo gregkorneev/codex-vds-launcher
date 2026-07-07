@@ -1,5 +1,5 @@
-const DISPLAY_VERSION = '1 - beta 2 (1 - beta 2)';
-const RELEASE_NAME = 'Codex VDS Launcher Developer Beta 2';
+const DISPLAY_VERSION = '1 - beta 3 (1 - beta 3)';
+const RELEASE_NAME = 'Codex VDS Launcher Developer Beta 3';
 
 const DIAGNOSTICS = [
   {
@@ -81,7 +81,7 @@ const TRANSLATIONS = {
     reloadConfig: 'Перезагрузить config',
     copySshConfig: 'Скопировать пример SSH config',
     codexCommandHelpCodex: 'Команда Codex на VDS: codex. Это обычный вариант для новых пользователей.',
-    codexCommandHelpVpn: 'Команда Codex на VDS: codex-vpn. Используйте только если вы сами настроили такую VPN-обёртку на сервере.',
+    codexCommandHelpVpn: 'Команда Codex на VDS: codex-vpn. Это пользовательская обёртка, приложение её не устанавливает. Новым пользователям нужен обычный codex.',
     openSetupGuide: 'Инструкция подключения',
     language: 'Язык',
     appearance: 'Оформление',
@@ -196,7 +196,7 @@ const TRANSLATIONS = {
     reloadConfig: 'Reload config',
     copySshConfig: 'Copy SSH config example',
     codexCommandHelpCodex: 'Codex command on VDS: codex. This is the normal choice for new users.',
-    codexCommandHelpVpn: 'Codex command on VDS: codex-vpn. Use it only if you created that VPN wrapper on your server.',
+    codexCommandHelpVpn: 'Codex command on VDS: codex-vpn. This is a custom wrapper and the app does not install it. New users should use plain codex.',
     openSetupGuide: 'Connection guide',
     language: 'Language',
     appearance: 'Appearance',
@@ -1402,7 +1402,6 @@ function escapeHtml(value) {
 function setupGuideMarkup({ welcome = false } = {}) {
   const alias = escapeHtml(appConfig.sshAlias || 'my-vds');
   const configFile = escapeHtml(appConfig.path || 'config.json');
-  const command = escapeHtml(appConfig.codexCommand || 'codex');
 
   if (currentSettings.language === 'en') {
     return `
@@ -1410,7 +1409,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
         <img src="./assets/app-icon.png" alt="">
         <div>
           <h3>${welcome ? 'Welcome to the developer beta' : 'Connect your VDS'}</h3>
-          <p>Set up a normal OpenSSH alias once, then launch Codex on the server from this app.</p>
+          <p>Install Codex CLI on the VDS, set up a normal OpenSSH alias once, then launch Codex on the server from this app.</p>
         </div>
       </section>
       <section class="guide-grid">
@@ -1418,10 +1417,14 @@ function setupGuideMarkup({ welcome = false } = {}) {
         <article><strong>Center</strong><span>Embedded terminal and session controls.</span></article>
         <article><strong>Right panel</strong><span>Server checks, diagnostics, quick prompts, quick commands.</span></article>
       </section>
+      <p class="guide-note"><strong>What is codex-vpn?</strong> It is not part of Codex CLI and is not installed by this app. Treat it as an advanced custom wrapper. For a fresh server, install and use the regular <code>codex</code> command.</p>
       <ol class="guide-steps">
-        <li><strong>Create or pick an SSH key.</strong><code>ssh-keygen -t ed25519 -f ~/.ssh/my_vds_key</code></li>
+        <li><strong>Install Codex CLI on the VDS.</strong><span>Connect to the server and run the official macOS/Linux installer, then start <code>codex</code> once to sign in with ChatGPT or an API key.</span><pre>ssh root@YOUR_SERVER_IP
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+codex</pre></li>
+        <li><strong>Create or pick a local SSH key.</strong><code>ssh-keygen -t ed25519 -f ~/.ssh/my_vds_key</code></li>
         <li><strong>Add the public key to your VDS.</strong><code>ssh-copy-id -i ~/.ssh/my_vds_key.pub root@YOUR_SERVER_IP</code></li>
-        <li><strong>Add an alias to ~/.ssh/config.</strong><pre>Host ${alias}
+        <li><strong>Add an alias to your local ~/.ssh/config.</strong><pre>Host ${alias}
     HostName YOUR_SERVER_IP
     User root
     IdentityFile ~/.ssh/my_vds_key
@@ -1431,8 +1434,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
     ServerAliveInterval 30
     ServerAliveCountMax 3</pre></li>
         <li><strong>Test it in Terminal.</strong><code>ssh ${alias}</code></li>
-        <li><strong>Open ${configFile}.</strong><span>Set <code>sshAlias</code> to <code>${alias}</code>, choose <code>${command}</code>, and add project paths like <code>/opt/app</code>.</span></li>
-        <li><strong>About codex-vpn.</strong><span>Use plain <code>codex</code> by default. Choose <code>codex-vpn</code> only if you created that wrapper on your VDS yourself.</span></li>
+        <li><strong>Open ${configFile}.</strong><span>Set <code>sshAlias</code> to <code>${alias}</code>, keep <code>codexCommand</code> as <code>codex</code>, and add project paths like <code>/opt/app</code>.</span></li>
         <li><strong>Reload config and start a session.</strong><span>Use the play button in the top toolbar or the project start button.</span></li>
       </ol>
     `;
@@ -1443,18 +1445,22 @@ function setupGuideMarkup({ welcome = false } = {}) {
       <img src="./assets/app-icon.png" alt="">
       <div>
         <h3>${welcome ? 'Добро пожаловать в developer beta' : 'Подключение к своему VDS'}</h3>
-        <p>Один раз настройте обычный OpenSSH alias, а затем запускайте Codex на сервере из приложения.</p>
+        <p>Установите Codex CLI на VDS, один раз настройте обычный OpenSSH alias, а затем запускайте Codex на сервере из приложения.</p>
       </div>
     </section>
-    <section class="guide-grid">
-      <article><strong>Левая панель</strong><span>Проекты, сессии, конфиг, кастомизация, AGENTS.md.</span></article>
-      <article><strong>Центр</strong><span>Встроенный терминал и кнопки управления сессией.</span></article>
-      <article><strong>Правая панель</strong><span>Проверки сервера, диагностика, быстрые промпты и команды.</span></article>
-    </section>
-    <ol class="guide-steps">
-      <li><strong>Создайте или выберите SSH-ключ.</strong><code>ssh-keygen -t ed25519 -f ~/.ssh/my_vds_key</code></li>
+      <section class="guide-grid">
+        <article><strong>Левая панель</strong><span>Проекты, сессии, конфиг, кастомизация, AGENTS.md.</span></article>
+        <article><strong>Центр</strong><span>Встроенный терминал и кнопки управления сессией.</span></article>
+        <article><strong>Правая панель</strong><span>Проверки сервера, диагностика, быстрые промпты и команды.</span></article>
+      </section>
+      <p class="guide-note"><strong>Что такое codex-vpn?</strong> Это не часть Codex CLI и приложение его не устанавливает. Считайте это продвинутой пользовательской обёрткой. Для нового сервера установите и используйте обычную команду <code>codex</code>.</p>
+      <ol class="guide-steps">
+      <li><strong>Установите Codex CLI на VDS.</strong><span>Подключитесь к серверу, запустите официальный installer для macOS/Linux, затем один раз выполните <code>codex</code> и авторизуйтесь через ChatGPT или API key.</span><pre>ssh root@YOUR_SERVER_IP
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+codex</pre></li>
+      <li><strong>Создайте или выберите локальный SSH-ключ.</strong><code>ssh-keygen -t ed25519 -f ~/.ssh/my_vds_key</code></li>
       <li><strong>Добавьте публичный ключ на VDS.</strong><code>ssh-copy-id -i ~/.ssh/my_vds_key.pub root@YOUR_SERVER_IP</code></li>
-      <li><strong>Добавьте alias в ~/.ssh/config.</strong><pre>Host ${alias}
+      <li><strong>Добавьте alias в локальный ~/.ssh/config.</strong><pre>Host ${alias}
     HostName YOUR_SERVER_IP
     User root
     IdentityFile ~/.ssh/my_vds_key
@@ -1464,8 +1470,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
     ServerAliveInterval 30
     ServerAliveCountMax 3</pre></li>
       <li><strong>Проверьте подключение в Terminal.</strong><code>ssh ${alias}</code></li>
-      <li><strong>Откройте ${configFile}.</strong><span>Укажите <code>sshAlias</code> как <code>${alias}</code>, выберите <code>${command}</code> и добавьте пути проектов вроде <code>/opt/app</code>.</span></li>
-      <li><strong>Про codex-vpn.</strong><span>По умолчанию используйте обычный <code>codex</code>. Выбирайте <code>codex-vpn</code> только если сами создали такую обёртку на VDS.</span></li>
+      <li><strong>Откройте ${configFile}.</strong><span>Укажите <code>sshAlias</code> как <code>${alias}</code>, оставьте <code>codexCommand</code> равным <code>codex</code> и добавьте пути проектов вроде <code>/opt/app</code>.</span></li>
       <li><strong>Перезагрузите config и запустите сессию.</strong><span>Используйте кнопку запуска в верхней панели или кнопку старта у проекта.</span></li>
     </ol>
   `;

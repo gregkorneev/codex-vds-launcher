@@ -219,11 +219,13 @@ body.right-panel-hidden .right-panel {
 
 .sidebar-section + .sidebar-section,
 .sidebar-section + .disclosure-section,
-.disclosure-section + .sidebar-section,
-.panel-section + .panel-section,
-.panel-section + .disclosure-section,
-.disclosure-section + .panel-section {
+.disclosure-section + .sidebar-section {
   margin-top: 18px;
+}
+
+.right-panel > .panel-section,
+.right-panel > .disclosure-section {
+  margin-top: 0;
 }
 
 .disclosure-section {
@@ -251,6 +253,18 @@ body.right-panel-hidden .right-panel {
 .panel-disclosure summary {
   min-height: 32px;
   margin-bottom: 12px;
+}
+
+.disclosure-section:not([open]) {
+  padding-top: 12px;
+}
+
+.disclosure-section:not([open]) summary {
+  margin-bottom: 0;
+}
+
+.panel-disclosure:not([open]) summary {
+  min-height: 0;
 }
 
 .disclosure-content {
@@ -774,6 +788,16 @@ body[data-theme="light"] .accent-swatch.active {
   gap: 14px;
   overflow: auto;
   padding-right: 4px;
+}
+
+.guide-note {
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.42;
 }
 
 .guide-hero {
