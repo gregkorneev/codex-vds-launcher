@@ -1,4 +1,5 @@
 const { app, BrowserWindow, Menu, Tray, dialog, ipcMain, nativeImage, shell } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const { exec, execFile, spawn } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -8,7 +9,11 @@ const packageJson = require('../package.json');
 
 const APP_NAME = 'Codex VDS Launcher';
 const BETA_APP_NAME = 'Codex VDS Launcher Beta';
-const RELEASE_NAME = packageJson.releaseName || 'Codex VDS Launcher Developer Beta 3';
+const APP_VERSION = packageJson.version;
+const IS_BETA_BUILD = /(?:^|-)beta(?:\.|$)/i.test(APP_VERSION);
+const APP_DISPLAY_NAME = IS_BETA_BUILD ? (packageJson.desktopName || BETA_APP_NAME) : APP_NAME;
+const UPDATE_CHANNEL = IS_BETA_BUILD ? 'beta' : 'latest';
+const RELEASE_NAME = packageJson.releaseName || 'Codex VDS Launcher Developer Beta 4';
 const DISPLAY_VERSION = packageJson.displayVersion || packageJson.version;
 const SSH_CONNECT_TIMEOUT_SECONDS = 15;
 const DIAGNOSTIC_TIMEOUT_MS = 30000;
@@ -19,6 +24,7 @@ const DEFAULT_ROWS = 34;
 const CONFIG_FILE_NAME = 'config.json';
 const HISTORY_FILE_NAME = 'codex-history.json';
 const SETTINGS_FILE_NAME = 'codex-settings.json';
+const LAUNCH_STATE_FILE_NAME = 'launch-state.json';
 const MANAGED_AGENT_MARKER = '<!-- Managed by Codex VDS Launcher -->';
 const MAX_MARKDOWN_INSTRUCTION_BYTES = 256 * 1024;
 const ALLOWED_CODEX_COMMANDS = new Set(['codex', 'codex-vpn']);
@@ -109,7 +115,20 @@ let mainWindow = null;
 let tray = null;
 let nextSessionNumber = 1;
 let currentConfig = null;
+let showVersionWelcomeOnLoad = false;
 const sessions = new Map();
+let updateState = {
+  status: 'idle',
+  channel: UPDATE_CHANNEL,
+  currentVersion: APP_VERSION,
+  displayVersion: DISPLAY_VERSION,
+  releaseName: RELEASE_NAME,
+  availableVersion: null,
+  percent: null,
+  message: ''
+};
+let updateCheckInProgress = false;
+let manualUpdateCheck = false;
 
 function getUserDataDir() {
   try {
@@ -151,6 +170,19 @@ function writeJsonFile(fileName, value) {
   fs.writeFileSync(tempPath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
   fs.renameSync(tempPath, filePath);
   return filePath;
+}
+
+function shouldShowVersionWelcome() {
+  const state = readJsonFile(LAUNCH_STATE_FILE_NAME, {});
+  const previousVersion = typeof state.version === 'string' ? state.version : null;
+
+  writeJsonFile(LAUNCH_STATE_FILE_NAME, {
+    version: APP_VERSION,
+    displayVersion: DISPLAY_VERSION,
+    updatedAt: new Date().toISOString()
+  });
+
+  return Boolean(previousVersion && previousVersion !== APP_VERSION);
 }
 
 function fileExists(filePath) {
@@ -453,6 +485,193 @@ function sendToRenderer(channel, payload) {
 
 function sendUiCommand(command) {
   sendToRenderer('ui:command', { command });
+}
+
+function updateStatus(overrides = {}) {
+  updateState = {
+    ...updateState,
+    ...overrides,
+    channel: UPDATE_CHANNEL,
+    currentVersion: APP_VERSION,
+    displayVersion: DISPLAY_VERSION,
+    releaseName: RELEASE_NAME
+  };
+  sendToRenderer('updates:status', updateState);
+  return updateState;
+}
+
+function updaterMessage(error) {
+  if (!error) {
+    return '';
+  }
+
+  return error.message || String(error);
+}
+
+function configureAutoUpdater() {
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.allowPrerelease = IS_BETA_BUILD;
+  autoUpdater.allowDowngrade = false;
+  autoUpdater.channel = UPDATE_CHANNEL;
+
+  autoUpdater.on('checking-for-update', () => {
+    updateStatus({
+      status: 'checking',
+      availableVersion: null,
+      percent: null,
+      message: 'Проверяем обновления...'
+    });
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    updateStatus({
+      status: 'downloading',
+      availableVersion: info?.version || null,
+      percent: 0,
+      message: `Найдена версия ${info?.version || 'обновления'}. Скачиваем...`
+    });
+
+    autoUpdater.downloadUpdate().catch((error) => {
+      updateCheckInProgress = false;
+      manualUpdateCheck = false;
+      updateStatus({
+        status: 'error',
+        percent: null,
+        message: updaterMessage(error)
+      });
+    });
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    updateCheckInProgress = false;
+    updateStatus({
+      status: 'latest',
+      availableVersion: null,
+      percent: null,
+      message: 'У вас установлена последняя версия.'
+    });
+
+    if (manualUpdateCheck) {
+      manualUpdateCheck = false;
+      dialog.showMessageBox(mainWindow || undefined, {
+        type: 'info',
+        buttons: ['OK'],
+        defaultId: 0,
+        message: 'У вас установлена последняя версия',
+        detail: `Сейчас работает ${RELEASE_NAME}: ${DISPLAY_VERSION}. Канал обновлений: ${UPDATE_CHANNEL}.`
+      }).catch(() => {});
+    }
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    updateStatus({
+      status: 'downloading',
+      percent: Math.max(0, Math.min(100, Number(progress.percent) || 0)),
+      message: `Скачиваем обновление: ${Math.round(Number(progress.percent) || 0)}%`
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    updateCheckInProgress = false;
+    manualUpdateCheck = false;
+    updateStatus({
+      status: 'downloaded',
+      availableVersion: info?.version || updateState.availableVersion,
+      percent: 100,
+      message: 'Обновление скачано и готово к установке.'
+    });
+
+    dialog.showMessageBox(mainWindow || undefined, {
+      type: 'question',
+      buttons: ['Перезапустить и установить', 'Позже'],
+      defaultId: 0,
+      cancelId: 1,
+      message: 'Обновление готово к установке',
+      detail: `Будет установлена версия ${info?.version || 'обновления'}. После запуска появится приветственное окно с текущей версией.`
+    }).then(({ response }) => {
+      if (response === 0) {
+        stopAllTerminalSessions();
+        autoUpdater.quitAndInstall(false, true);
+      }
+    }).catch(() => {});
+  });
+
+  autoUpdater.on('error', (error) => {
+    updateCheckInProgress = false;
+    const message = updaterMessage(error);
+    updateStatus({
+      status: 'error',
+      percent: null,
+      message
+    });
+
+    if (manualUpdateCheck) {
+      manualUpdateCheck = false;
+      dialog.showMessageBox(mainWindow || undefined, {
+        type: 'error',
+        buttons: ['OK'],
+        defaultId: 0,
+        message: 'Не удалось проверить обновления',
+        detail: message
+      }).catch(() => {});
+    }
+  });
+}
+
+async function checkForUpdates({ manual = false } = {}) {
+  if (!app.isPackaged) {
+    const state = updateStatus({
+      status: 'unsupported',
+      percent: null,
+      message: 'Обновления доступны только в установленной сборке приложения.'
+    });
+
+    if (manual) {
+      await dialog.showMessageBox(mainWindow || undefined, {
+        type: 'info',
+        buttons: ['OK'],
+        defaultId: 0,
+        message: 'Обновления доступны после установки приложения',
+        detail: 'В dev-режиме Electron не использует app-update.yml из собранного пакета.'
+      });
+    }
+
+    return { ok: false, state };
+  }
+
+  if (updateCheckInProgress) {
+    return { ok: true, state: updateState };
+  }
+
+  manualUpdateCheck = manual;
+  updateCheckInProgress = true;
+
+  try {
+    await autoUpdater.checkForUpdates();
+    return { ok: true, state: updateState };
+  } catch (error) {
+    const wasManual = manualUpdateCheck;
+    updateCheckInProgress = false;
+    manualUpdateCheck = false;
+    const state = updateStatus({
+      status: 'error',
+      percent: null,
+      message: updaterMessage(error)
+    });
+
+    if (wasManual) {
+      await dialog.showMessageBox(mainWindow || undefined, {
+        type: 'error',
+        buttons: ['OK'],
+        defaultId: 0,
+        message: 'Не удалось проверить обновления',
+        detail: state.message
+      });
+    }
+
+    return { ok: false, state, error: state.message };
+  }
 }
 
 function getSshConfigPath() {
@@ -1011,7 +1230,7 @@ function createWindow() {
     height: 820,
     minWidth: 1100,
     minHeight: 760,
-    title: APP_NAME,
+    title: APP_DISPLAY_NAME,
     icon: APP_ICON_PATH,
     backgroundColor: '#0f172a',
     webPreferences: {
@@ -1025,12 +1244,21 @@ function createWindow() {
     mainWindow = null;
   });
 
+  mainWindow.webContents.once('did-finish-load', () => {
+    sendToRenderer('updates:status', updateState);
+
+    if (showVersionWelcomeOnLoad) {
+      sendUiCommand('show-version-welcome');
+      showVersionWelcomeOnLoad = false;
+    }
+  });
+
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 }
 
 function configureAboutPanel() {
   app.setAboutPanelOptions({
-    applicationName: APP_NAME,
+    applicationName: APP_DISPLAY_NAME,
     applicationVersion: DISPLAY_VERSION,
     version: DISPLAY_VERSION,
     copyright: 'Copyright © 2026 Codex VDS Launcher contributors',
@@ -1040,17 +1268,17 @@ function configureAboutPanel() {
 
 function setupApplicationMenu() {
   const appMenu = [
-    { label: `О ${APP_NAME}`, role: 'about' },
+    { label: `О ${APP_DISPLAY_NAME}`, role: 'about' },
     { label: 'Инструкция подключения к VDS', click: () => sendUiCommand('show-setup-guide') },
     { type: 'separator' },
     { role: 'services', label: 'Службы' },
     { type: 'separator' },
-    { label: `Скрыть ${APP_NAME}`, role: 'hide' },
+    { label: `Скрыть ${APP_DISPLAY_NAME}`, role: 'hide' },
     { label: 'Скрыть остальные', role: 'hideOthers' },
     { label: 'Показать все', role: 'unhide' },
     { type: 'separator' },
     {
-      label: `Закрыть ${APP_NAME}`,
+      label: `Закрыть ${APP_DISPLAY_NAME}`,
       accelerator: 'Command+Q',
       click: () => {
         stopAllTerminalSessions();
@@ -1098,7 +1326,9 @@ function setupApplicationMenu() {
       submenu: [
         { label: RELEASE_NAME, enabled: false },
         { label: `Версия ${DISPLAY_VERSION}`, enabled: false },
+        { label: `Канал обновлений: ${UPDATE_CHANNEL}`, enabled: false },
         { type: 'separator' },
+        { label: 'Обновить приложение', click: () => checkForUpdates({ manual: true }) },
         { label: 'Показать приветственный экран', click: () => sendUiCommand('show-welcome') },
         { label: 'Инструкция подключения', click: () => sendUiCommand('show-setup-guide') }
       ]
@@ -1130,10 +1360,10 @@ function createTray() {
   const trayImage = process.platform === 'darwin' ? image.resize({ width: 18, height: 18 }) : image;
   trayImage.setTemplateImage(process.platform === 'darwin');
   tray = new Tray(trayImage);
-  tray.setToolTip(APP_NAME);
+  tray.setToolTip(APP_DISPLAY_NAME);
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: `Открыть ${APP_NAME}`, click: showMainWindow },
+    { label: `Открыть ${APP_DISPLAY_NAME}`, click: showMainWindow },
     { label: 'Инструкция подключения', click: () => sendUiCommand('show-setup-guide') },
     {
       label: 'Открыть первый проект во внешнем терминале',
@@ -1230,11 +1460,15 @@ function registerHandlers() {
   ipcMain.handle('settings:defaultAgentInstructions', () => DEFAULT_AGENT_INSTRUCTIONS);
   ipcMain.handle('markdown:selectInstructionFile', () => selectMarkdownInstructionFile());
   ipcMain.handle('markdown:readInstructionFile', (_event, filePath) => readMarkdownInstructionFile(filePath));
+  ipcMain.handle('updates:status', () => updateState);
+  ipcMain.handle('updates:check', () => checkForUpdates({ manual: true }));
 }
 
 app.whenReady().then(() => {
-  app.setName(BETA_APP_NAME);
+  app.setName(APP_DISPLAY_NAME);
+  showVersionWelcomeOnLoad = shouldShowVersionWelcome();
   configureAboutPanel();
+  configureAutoUpdater();
   loadAppConfig();
   registerHandlers();
   setupApplicationMenu();

@@ -724,6 +724,28 @@ body[data-theme="light"] .accent-swatch.active {
   line-height: 1.35;
 }
 
+.update-status {
+  margin-top: -2px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.update-status[data-state="downloaded"],
+.update-status[data-state="latest"] {
+  color: var(--ok);
+}
+
+.update-status[data-state="checking"],
+.update-status[data-state="downloading"] {
+  color: var(--accent-cyan);
+}
+
+.update-status[data-state="error"] {
+  color: var(--danger);
+}
+
 .version-note strong {
   color: var(--text);
   font-weight: 600;
@@ -816,6 +838,12 @@ body[data-theme="light"] .accent-swatch.active {
   height: 72px;
   border-radius: var(--radius);
   object-fit: cover;
+}
+
+.guide-version-line {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .guide-hero h3 {

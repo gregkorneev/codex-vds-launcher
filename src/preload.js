@@ -24,6 +24,8 @@ contextBridge.exposeInMainWorld('codexVdsLauncher', {
   defaultAgentInstructions: () => ipcRenderer.invoke('settings:defaultAgentInstructions'),
   selectMarkdownInstructionFile: () => ipcRenderer.invoke('markdown:selectInstructionFile'),
   readMarkdownInstructionFile: (filePath) => ipcRenderer.invoke('markdown:readInstructionFile', filePath),
+  getUpdateStatus: () => ipcRenderer.invoke('updates:status'),
+  checkForUpdates: () => ipcRenderer.invoke('updates:check'),
   getPathForFile: (file) => webUtils.getPathForFile(file),
   onTerminalData: (callback) => {
     const listener = (_event, payload) => callback(payload);
@@ -49,5 +51,10 @@ contextBridge.exposeInMainWorld('codexVdsLauncher', {
     const listener = (_event, payload) => callback(payload);
     ipcRenderer.on('ui:command', listener);
     return () => ipcRenderer.removeListener('ui:command', listener);
+  },
+  onUpdateStatus: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on('updates:status', listener);
+    return () => ipcRenderer.removeListener('updates:status', listener);
   }
 });

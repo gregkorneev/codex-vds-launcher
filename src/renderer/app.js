@@ -1,5 +1,5 @@
-const DISPLAY_VERSION = '1 - beta 3 (1 - beta 3)';
-const RELEASE_NAME = 'Codex VDS Launcher Developer Beta 3';
+const DISPLAY_VERSION = '1 - beta 4 (1 - beta 4)';
+const RELEASE_NAME = 'Codex VDS Launcher Developer Beta 4';
 
 const DIAGNOSTICS = [
   {
@@ -92,6 +92,15 @@ const TRANSLATIONS = {
     accentColor: 'Акцентный цвет',
     syncAgents: 'Синхронизировать AGENTS.md',
     configureAgents: 'Настроить AGENTS.md',
+    updateApp: 'Обновить приложение',
+    updateIdle: 'Обновления не проверялись',
+    updateChecking: 'Проверяем обновления...',
+    updateDownloading: 'Скачиваем обновление',
+    updateDownloaded: 'Обновление готово к установке',
+    updateLatest: 'У вас установлена последняя версия.',
+    updateUnsupported: 'Обновления доступны только в установленной сборке.',
+    updateError: 'Ошибка обновления',
+    updateChannel: 'Канал',
     history: 'История',
     clearHistory: 'Очистить историю',
     clearHistoryTitle: 'Очистить сохранённую историю',
@@ -207,6 +216,15 @@ const TRANSLATIONS = {
     accentColor: 'Accent color',
     syncAgents: 'Sync AGENTS.md',
     configureAgents: 'Configure AGENTS.md',
+    updateApp: 'Update app',
+    updateIdle: 'Updates have not been checked',
+    updateChecking: 'Checking for updates...',
+    updateDownloading: 'Downloading update',
+    updateDownloaded: 'Update is ready to install',
+    updateLatest: 'You are running the latest version.',
+    updateUnsupported: 'Updates are available only in an installed build.',
+    updateError: 'Update error',
+    updateChannel: 'Channel',
     history: 'History',
     clearHistory: 'Clear history',
     clearHistoryTitle: 'Clear saved history',
@@ -331,6 +349,8 @@ const themeSelect = document.querySelector('#themeSelect');
 const accentPicker = document.querySelector('#accentPicker');
 const syncAgentInstructions = document.querySelector('#syncAgentInstructions');
 const editAgentInstructionsButton = document.querySelector('#editAgentInstructions');
+const updateAppButton = document.querySelector('#updateApp');
+const updateStatus = document.querySelector('#updateStatus');
 const agentInstructionsDialog = document.querySelector('#agentInstructionsDialog');
 const agentInstructionsForm = document.querySelector('#agentInstructionsForm');
 const agentInstructionsText = document.querySelector('#agentInstructionsText');
@@ -396,6 +416,7 @@ let saveHistoryTimer = null;
 let saveSettingsTimer = null;
 let quickItemEditor = null;
 let sshStatusRendered = false;
+let currentUpdateState = { status: 'idle' };
 
 let currentSettings = {
   language: 'ru',
@@ -467,6 +488,7 @@ function applyI18n() {
   renderConfigSummary();
   renderDiagnostics();
   renderQuickLists();
+  updateStatusText(currentUpdateState);
   updateControls();
 }
 
@@ -636,6 +658,34 @@ function applySettings(settings) {
   });
   applyPanelVisibility();
   applyI18n();
+}
+
+function updateStatusText(state = {}) {
+  const hasMessage = Object.prototype.hasOwnProperty.call(state, 'message');
+  currentUpdateState = {
+    ...currentUpdateState,
+    ...state,
+    message: hasMessage ? state.message : (state.status ? '' : currentUpdateState.message)
+  };
+  const status = currentUpdateState.status || 'idle';
+  const channel = currentUpdateState.channel || 'latest';
+  const percent = Number.isFinite(currentUpdateState.percent) ? ` ${Math.round(currentUpdateState.percent)}%` : '';
+  const suffix = ` · ${t('updateChannel')}: ${channel}`;
+  const explicitMessage = typeof currentUpdateState.message === 'string' ? currentUpdateState.message.trim() : '';
+
+  const fallback = {
+    idle: t('updateIdle'),
+    checking: t('updateChecking'),
+    downloading: `${t('updateDownloading')}${percent}`,
+    downloaded: t('updateDownloaded'),
+    latest: t('updateLatest'),
+    unsupported: t('updateUnsupported'),
+    error: t('updateError')
+  }[status] || t('updateIdle');
+
+  updateStatus.textContent = `${explicitMessage || fallback}${suffix}`;
+  updateStatus.dataset.state = status;
+  updateAppButton.disabled = ['checking', 'downloading'].includes(status);
 }
 
 function saveSettingsSoon() {
@@ -1391,6 +1441,22 @@ async function copySshConfigExample() {
   writeLocal(activeProjectId, `\r\n[ssh] ${t('sshExampleCopied')}\r\n`);
 }
 
+async function checkForAppUpdates() {
+  updateStatusText({ status: 'checking' });
+
+  try {
+    const result = await api.checkForUpdates();
+    if (result?.state) {
+      updateStatusText(result.state);
+    }
+  } catch (error) {
+    updateStatusText({
+      status: 'error',
+      message: error.message || String(error)
+    });
+  }
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -1409,6 +1475,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
         <img src="./assets/app-icon.png" alt="">
         <div>
           <h3>${welcome ? 'Welcome to the developer beta' : 'Connect your VDS'}</h3>
+          <p class="guide-version-line"><strong>Version:</strong> ${escapeHtml(DISPLAY_VERSION)}</p>
           <p>Install Codex CLI on the VDS, set up a normal OpenSSH alias once, then launch Codex on the server from this app.</p>
         </div>
       </section>
@@ -1445,6 +1512,7 @@ codex</pre></li>
       <img src="./assets/app-icon.png" alt="">
       <div>
         <h3>${welcome ? 'Добро пожаловать в developer beta' : 'Подключение к своему VDS'}</h3>
+        <p class="guide-version-line"><strong>Версия:</strong> ${escapeHtml(DISPLAY_VERSION)}</p>
         <p>Установите Codex CLI на VDS, один раз настройте обычный OpenSSH alias, а затем запускайте Codex на сервере из приложения.</p>
       </div>
     </section>
@@ -1633,6 +1701,7 @@ toggleRightPanelButton.addEventListener('click', () => {
   saveSettingsSoon();
 });
 editAgentInstructionsButton.addEventListener('click', openAgentInstructionsEditor);
+updateAppButton.addEventListener('click', checkForAppUpdates);
 agentInstructionsForm.addEventListener('submit', saveAgentInstructions);
 cancelAgentInstructionsButton.addEventListener('click', closeAgentInstructionsEditor);
 cancelAgentInstructionsFooterButton.addEventListener('click', closeAgentInstructionsEditor);
@@ -1724,6 +1793,7 @@ api.onConfigChanged(({ config, history }) => {
 api.onUiCommand(({ command }) => {
   const actions = {
     'show-welcome': () => openSetupGuide({ welcome: true }),
+    'show-version-welcome': () => openSetupGuide({ welcome: true }),
     'show-setup-guide': () => openSetupGuide(),
     'open-config': openConfigFile,
     'reload-config': reloadConfig,
@@ -1740,6 +1810,10 @@ api.onUiCommand(({ command }) => {
   };
 
   actions[command]?.();
+});
+
+api.onUpdateStatus((state) => {
+  updateStatusText(state);
 });
 
 async function initialize() {
@@ -1762,6 +1836,11 @@ async function initialize() {
   }
 
   renderQuickLists();
+  try {
+    updateStatusText(await api.getUpdateStatus());
+  } catch (_error) {
+    updateStatusText({ status: 'idle' });
+  }
   updateControls();
   renderActiveBuffer();
   await renderSshSetupStatus();

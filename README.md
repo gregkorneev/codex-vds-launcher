@@ -10,7 +10,7 @@ Codex VDS Launcher is a local Electron app with an embedded xterm.js terminal. I
 
 ### Status
 
-Developer beta. Current build: **Codex VDS Launcher Developer Beta 3**.
+Developer beta. Current build: **Codex VDS Launcher Developer Beta 4**.
 
 ### Features
 
@@ -156,7 +156,18 @@ npm run dist:mac
 npm run dist:win
 ```
 
-The macOS target produces a `.dmg`. The Windows target produces an NSIS `.exe`.
+The macOS target produces a `.dmg` and `.zip`; the `.zip` is required for Electron auto-update metadata. The Windows target produces an NSIS `.exe`.
+
+### Updates
+
+The app uses GitHub Releases through `electron-updater`.
+
+```bash
+npm run publish:beta
+npm run publish:release
+```
+
+Beta builds use the `beta` update channel and should be published as GitHub pre-releases. Stable builds use the `latest` channel and should be published as normal releases. Users can click **Update app** in the Customization panel; if no newer build exists, the app shows that the latest version is already installed.
 
 ## Русский
 
@@ -164,7 +175,7 @@ Codex VDS Launcher — локальное Electron-приложение со в�
 
 ### Статус
 
-Developer beta. Текущая сборка: **Codex VDS Launcher Developer Beta 3**.
+Developer beta. Текущая сборка: **Codex VDS Launcher Developer Beta 4**.
 
 ### Возможности
 
@@ -310,4 +321,15 @@ npm run dist:mac
 npm run dist:win
 ```
 
-Цель macOS создаёт `.dmg`. Цель Windows создаёт NSIS `.exe`.
+Цель macOS создаёт `.dmg` и `.zip`; `.zip` нужен для metadata автообновлений Electron. Цель Windows создаёт NSIS `.exe`.
+
+### Обновления
+
+Приложение использует GitHub Releases через `electron-updater`.
+
+```bash
+npm run publish:beta
+npm run publish:release
+```
+
+Beta-сборки используют канал обновлений `beta` и должны публиковаться как GitHub pre-release. Стабильные сборки используют канал `latest` и публикуются как обычные releases. Пользователь может нажать **Обновить приложение** в панели кастомизации; если новой версии нет, приложение покажет сообщение, что установлена последняя версия.

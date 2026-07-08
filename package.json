@@ -1,18 +1,20 @@
 {
   "name": "codex-vds-launcher",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Desktop launcher for running Codex CLI on your VDS over SSH",
   "desktopName": "Codex VDS Launcher Beta",
-  "displayVersion": "1 - beta 3 (1 - beta 3)",
-  "releaseName": "Codex VDS Launcher Developer Beta 3",
+  "displayVersion": "1 - beta 4 (1 - beta 4)",
+  "releaseName": "Codex VDS Launcher Developer Beta 4",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
     "dist": "electron-builder --publish never",
-    "dist:mac": "electron-builder --mac dmg --publish never",
+    "dist:mac": "electron-builder --mac dmg zip --publish never",
     "dist:win": "electron-builder --win nsis --x64 --publish never -c.npmRebuild=false",
+    "publish:beta": "electron-builder --publish always -c.publish.channel=beta -c.publish.releaseType=prerelease",
+    "publish:release": "electron-builder --publish always -c.publish.channel=latest -c.publish.releaseType=release -c.productName=\"Codex VDS Launcher\"",
     "check": "node --check src/main.js && node --check src/preload.js && node --check src/renderer/app.js",
     "license:summary": "license-checker --summary",
     "license:prod": "license-checker --production"
@@ -40,7 +42,8 @@
       "icon": "build/icon.icns",
       "identity": "-",
       "target": [
-        "dmg"
+        "dmg",
+        "zip"
       ]
     },
     "win": {
@@ -65,7 +68,11 @@
       "allowToChangeInstallationDirectory": true,
       "perMachine": false
     },
-    "publish": null
+    "publish": {
+      "provider": "github",
+      "owner": "gregkorneev",
+      "repo": "codex-vds-launcher"
+    }
   },
   "keywords": [
     "electron",
@@ -84,6 +91,7 @@
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
+    "electron-updater": "^6.8.9",
     "node-pty": "^1.1.0"
   }
 }
