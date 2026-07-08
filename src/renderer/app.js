@@ -1,5 +1,5 @@
-const DISPLAY_VERSION = '1 - beta 4 (1 - beta 4)';
-const RELEASE_NAME = 'Codex VDS Launcher Developer Beta 4';
+const DISPLAY_VERSION = '1 - beta 4.1 (1 - beta 4.1)';
+const RELEASE_NAME = 'Codex VDS Launcher Developer Beta 4.1';
 
 const DIAGNOSTICS = [
   {

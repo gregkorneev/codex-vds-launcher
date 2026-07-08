@@ -10,7 +10,7 @@ Codex VDS Launcher is a local Electron app with an embedded xterm.js terminal. I
 
 ### Status
 
-Developer beta. Current build: **Codex VDS Launcher Developer Beta 4**.
+Developer beta. Current build: **Codex VDS Launcher Developer Beta 4.1**.
 
 ### Features
 
@@ -175,7 +175,7 @@ Codex VDS Launcher — локальное Electron-приложение со в�
 
 ### Статус
 
-Developer beta. Текущая сборка: **Codex VDS Launcher Developer Beta 4**.
+Developer beta. Текущая сборка: **Codex VDS Launcher Developer Beta 4.1**.
 
 ### Возможности
 
