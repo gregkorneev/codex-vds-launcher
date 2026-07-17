@@ -4,14 +4,13 @@ on:
   push:
     tags:
       - 'v*-beta.*'
-  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   build-macos:
-    name: Build macOS DMG
+    name: Build macOS DMG, ZIP and metadata
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -26,21 +25,41 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check sources
-        run: npm run check
+      - name: Check and test
+        run: |
+          npm run check
+          npm test
 
-      - name: Build macOS app
+      - name: Build macOS production artifacts
         run: npm run dist:mac
 
-      - name: Upload macOS artifact
+      - name: Verify ad-hoc signature
+        run: |
+          app_path="$(find dist -type d -name '*.app' -print -quit)"
+          test -n "$app_path"
+          codesign --verify --deep --strict "$app_path"
+          codesign -dv --verbose=4 "$app_path" 2>&1 | tee codesign.txt
+          grep -Eq 'Signature=adhoc|TeamIdentifier=not set' codesign.txt
+
+      - name: Verify macOS artifacts
+        run: |
+          test -n "$(find dist -maxdepth 1 -name '*.dmg' -print -quit)"
+          test -n "$(find dist -maxdepth 1 -name '*.zip' -print -quit)"
+          test -f dist/beta-mac.yml
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.5$' dist/beta-mac.yml
+
+      - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-dmg
-          path: dist/*.dmg
+          name: macos-release
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/beta-mac.yml
           if-no-files-found: error
 
   build-windows:
-    name: Build Windows EXE
+    name: Build Windows installer and metadata
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -55,21 +74,32 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Check sources
-        run: npm run check
+      - name: Check and test
+        run: |
+          npm run check
+          npm test
 
-      - name: Build Windows app
+      - name: Build Windows production artifacts
         run: npm run dist:win
 
-      - name: Upload Windows artifact
+      - name: Verify Windows artifacts
+        shell: bash
+        run: |
+          test -n "$(find dist -maxdepth 1 -name '*win-x64.exe' -print -quit)"
+          test -f dist/beta.yml
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.5$' dist/beta.yml
+
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-exe
-          path: dist/*win-x64.exe
+          name: windows-release
+          path: |
+            dist/*win-x64.exe
+            dist/beta.yml
           if-no-files-found: error
 
   publish-release:
-    name: Publish GitHub pre-release
+    name: Publish and verify GitHub pre-release
     runs-on: ubuntu-latest
     needs:
       - build-macos
@@ -85,56 +115,66 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_TITLE: Codex VDS Launcher Developer Beta 3
+          RELEASE_TITLE: Codex VDS Launcher Developer Beta 5
         run: |
           cat > release-notes.md <<'EOF'
-            ## English
+          ## Русский
 
-            Developer Beta 3 for Codex VDS Launcher.
+          Developer Beta 5 добавляет два полноценных режима работы: Codex CLI на VDS через SSH и локальный Codex CLI, установленный на компьютере.
 
-            Highlights:
-            - Reduced empty spacing around collapsed sections in the sidebar and right panel.
-            - Diagnostics now use the same collapsible section pattern as Server Status.
-            - First-launch onboarding and help now explain how to install Codex CLI on a VDS and connect through the app.
-            - `codex-vpn` is documented as an optional custom wrapper, not something new users need.
-            - macOS release downloads now include only the `.dmg` installer.
-            - Windows x64 `.exe` installer is now built for the release.
+          Главное:
+          - Кнопка `＋` добавляет пользовательские проекты; VDS-папки выбираются только из проверенного списка внутри `projectsRoot`, локальные — через нативный выбор каталога.
+          - Пользовательские проекты сохраняются отдельно в `user-projects.json`; для Web/PWA поддерживается изолированный `profiles/<user>/projects.json`.
+          - Проекты и одноимённые сессии строятся динамически. Разделы «Проекты», «Сессии», «Оформление» и «Статус сервера» сворачиваются и запоминают состояние.
+          - Раздел и нативное меню «Диагностика» удалены; быстрые карточки состояния VDS, SSH, Codex и VPN сохранены.
+          - Ad-hoc macOS-сборка больше не запускает несовместимый ShipIt: кнопка `Скачать v… (.dmg)` открывает только страницу конкретного prerelease официального репозитория.
+          - Windows и будущие macOS-сборки с доверенной подписью сохраняют автоматическую загрузку и установку.
+          - Beta-канал публикует `.dmg`, `.zip`, `.exe`, `beta-mac.yml` и `beta.yml`; Linux и `.blockmap` исключены.
 
-            Notes:
-            - This is a pre-release for manual testing.
-            - The macOS app is ad-hoc signed and not notarized.
-            - Configure your own SSH alias in `~/.ssh/config` before starting sessions.
-            - Install Codex CLI on the VDS first, then keep `codexCommand` as `codex` for normal use.
+          Важно: переход со старых Beta на Beta 5 нужно один раз выполнить вручную через `.dmg`, потому что старые сборки ещё используют ShipIt.
 
-            ## Русский
+          ## English
 
-            Developer Beta 3 для Codex VDS Launcher.
+          Developer Beta 5 adds two complete launch modes: Codex CLI on a VDS over SSH and a locally installed Codex CLI.
 
-            Главное:
-            - Уменьшено пустое место вокруг свёрнутых секций в боковой и правой панели.
-            - «Диагностика» теперь оформлена как раскрывающаяся секция, как «Статус сервера».
-            - Приветственный экран и справка объясняют, как установить Codex CLI на VDS и подключиться через приложение.
-            - `codex-vpn` описан как необязательная пользовательская обёртка, а не обязательный путь для новых пользователей.
-            - Для macOS в релизных загрузках остаётся только `.dmg`.
-            - Для Windows теперь собирается x64 `.exe` installer.
+          Highlights:
+          - Add custom VDS or local projects with validated folder selection and separate JSON persistence.
+          - Dynamic project/session lists and persistent collapsible sections.
+          - Diagnostics UI removed while compact VDS status cards remain.
+          - Safe manual DMG updates for ad-hoc macOS builds; automatic updates remain for Windows and trusted macOS signing.
+          - Beta metadata and production artifacts are published for macOS and Windows only.
 
-            Примечания:
-            - Это pre-release для ручного тестирования.
-            - macOS-приложение подписано ad-hoc и не notarized.
-            - Перед запуском сессий настройте свой SSH alias в `~/.ssh/config`.
-            - Сначала установите Codex CLI на VDS, затем для обычной работы оставьте `codexCommand` равным `codex`.
+          This is a prerelease. The macOS app is ad-hoc signed and is not notarized.
           EOF
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release edit "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes-file release-notes.md --prerelease
+            gh release view "$RELEASE_TAG" --json assets -q '.assets[].name' | while IFS= read -r asset; do
+              test -z "$asset" || gh release delete-asset "$RELEASE_TAG" "$asset" -y
+            done
           else
             gh release create "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes-file release-notes.md --prerelease
           fi
+          mapfile -d '' assets < <(find release-assets -type f \( -name '*.dmg' -o -name '*.zip' -o -name '*win-x64.exe' -o -name 'beta-mac.yml' -o -name 'beta.yml' \) -print0)
+          test "${#assets[@]}" -eq 5
+          gh release upload "$RELEASE_TAG" "${assets[@]}"
 
-          gh release view "$RELEASE_TAG" --json assets -q '.assets[].name' | while IFS= read -r asset; do
-            [ -n "$asset" ] || continue
-            gh release delete-asset "$RELEASE_TAG" "$asset" -y || true
-          done
+      - name: Verify published beta channel
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          test "$(gh release view "$RELEASE_TAG" --json isPrerelease -q .isPrerelease)" = true
+          assets="$(gh release view "$RELEASE_TAG" --json assets -q '.assets[].name')"
+          grep -Fx 'beta-mac.yml' <<< "$assets"
+          grep -Fx 'beta.yml' <<< "$assets"
+          test "$(grep -Ec '\.blockmap$' <<< "$assets")" -eq 0
 
-          mapfile -d '' assets < <(find release-assets -type f \( -name '*.dmg' -o -name '*win-x64.exe' \) -print0)
-          gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          metadata_dir="$(mktemp -d)"
+          gh release download "$RELEASE_TAG" -p beta-mac.yml -p beta.yml -D "$metadata_dir"
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.5$' "$metadata_dir/beta-mac.yml"
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.5$' "$metadata_dir/beta.yml"
+
+          latest_stable="$(gh api "repos/$GH_REPO/releases/latest" --jq .tag_name 2>/dev/null || true)"
+          test "$latest_stable" != "$RELEASE_TAG"

@@ -50,7 +50,7 @@ Arbitrary configured launch commands are not accepted.
 
 ### AGENTS.md
 
-When enabled, the app syncs a managed `AGENTS.md` into the selected remote project before starting Codex.
+When enabled, the app syncs a managed `AGENTS.md` into the selected local or remote project before starting Codex.
 
 The managed marker is:
 
@@ -58,15 +58,15 @@ The managed marker is:
 <!-- Managed by Codex VDS Launcher -->
 ```
 
-If a remote project already has an `AGENTS.md` without that marker, the app leaves it unchanged and prints a warning in the terminal.
+If a project already has an `AGENTS.md` without that marker, the app leaves it unchanged and prints a warning in the terminal.
 
 ### Local History
 
 Terminal history is stored locally in Electron user data as `codex-history.json`. It can contain sensitive output from remote commands or Codex sessions. Clear history from the app when needed.
 
-### Diagnostics
+### Server Status
 
-Diagnostics are intended to be read-only. They inspect SSH connectivity, remote identity, command availability, server health, Git status, and Docker state without restarting services, running migrations, deleting files, changing firewall settings, changing SSH/VPN/systemd state, or modifying databases.
+Status cards are read-only and inspect VDS connectivity, identity, and command availability. The renderer cannot submit update URLs: the main process constructs and validates the exact official GitHub release URL before opening it.
 
 ### User Responsibility
 
@@ -120,7 +120,7 @@ SSH-команды строятся из валидированных значе
 
 ### AGENTS.md
 
-Если опция включена, приложение синхронизирует управляемый `AGENTS.md` в выбранный удалённый проект перед запуском Codex.
+Если опция включена, приложение синхронизирует управляемый `AGENTS.md` в выбранный локальный или удалённый проект перед запуском Codex.
 
 Маркер управления:
 
@@ -128,15 +128,15 @@ SSH-команды строятся из валидированных значе
 <!-- Managed by Codex VDS Launcher -->
 ```
 
-Если в удалённом проекте уже есть `AGENTS.md` без этого маркера, приложение оставляет файл без изменений и печатает предупреждение в терминал.
+Если в проекте уже есть `AGENTS.md` без этого маркера, приложение оставляет файл без изменений и печатает предупреждение в терминал.
 
 ### Локальная история
 
 История терминала хранится локально в Electron user data как `codex-history.json`. Она может содержать чувствительный вывод удалённых команд или Codex-сессий. Очищайте историю в приложении при необходимости.
 
-### Диагностика
+### Статус сервера
 
-Диагностика задумана как read-only. Она проверяет SSH connectivity, удалённую идентичность, наличие команд, здоровье сервера, Git status и Docker state без перезапуска сервисов, миграций, удаления файлов, изменения firewall, SSH/VPN/systemd или состояния баз данных.
+Карточки статуса выполняют только read-only проверки VDS и доступности команд. Renderer не передаёт URL обновления: main process сам строит и проверяет точную страницу официального GitHub release.
 
 ### Ответственность пользователя
 

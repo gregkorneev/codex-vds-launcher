@@ -246,6 +246,20 @@ body.right-panel-hidden .right-panel {
   text-transform: uppercase;
 }
 
+.section-summary-with-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-summary-with-action > span {
+  flex: 1;
+}
+
+.section-summary-with-action .mini-button {
+  margin: -5px 0 -5px auto;
+}
+
 .panel-disclosure {
   margin-top: 0;
 }
@@ -718,6 +732,16 @@ body[data-theme="light"] .accent-swatch.active {
   font-size: 0.78rem;
 }
 
+#remoteFolderField,
+#localFolderField {
+  display: grid;
+  gap: 8px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
 .version-note {
   color: var(--muted);
   font-size: 0.76rem;
@@ -738,7 +762,8 @@ body[data-theme="light"] .accent-swatch.active {
 }
 
 .update-status[data-state="checking"],
-.update-status[data-state="downloading"] {
+.update-status[data-state="downloading"],
+.update-status[data-state="available"] {
   color: var(--accent-cyan);
 }
 

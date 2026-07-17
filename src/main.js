@@ -1,19 +1,31 @@
 const { app, BrowserWindow, Menu, Tray, dialog, ipcMain, nativeImage, shell } = require('electron');
 const { autoUpdater } = require('electron-updater');
-const { exec, execFile, spawn } = require('node:child_process');
+const { exec, execFile, spawn, spawnSync } = require('node:child_process');
+const { randomUUID } = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const pty = require('node-pty');
 const packageJson = require('../package.json');
+const {
+  normalizeProject: normalizeUserProject,
+  readProjects,
+  writeProjects
+} = require('./shared/user-projects');
+const {
+  determineUpdateMode,
+  getUpdateChannel,
+  isAllowedReleaseUrl,
+  releaseUrlForVersion
+} = require('./shared/update-policy');
 
 const APP_NAME = 'Codex VDS Launcher';
 const BETA_APP_NAME = 'Codex VDS Launcher Beta';
 const APP_VERSION = packageJson.version;
 const IS_BETA_BUILD = /(?:^|-)beta(?:\.|$)/i.test(APP_VERSION);
 const APP_DISPLAY_NAME = IS_BETA_BUILD ? (packageJson.desktopName || BETA_APP_NAME) : APP_NAME;
-const UPDATE_CHANNEL = IS_BETA_BUILD ? 'beta' : 'latest';
-const RELEASE_NAME = packageJson.releaseName || 'Codex VDS Launcher Developer Beta 4.1';
+const UPDATE_CHANNEL = getUpdateChannel(APP_VERSION);
+const RELEASE_NAME = packageJson.releaseName || 'Codex VDS Launcher Developer Beta 5';
 const DISPLAY_VERSION = packageJson.displayVersion || packageJson.version;
 const SSH_CONNECT_TIMEOUT_SECONDS = 15;
 const DIAGNOSTIC_TIMEOUT_MS = 30000;
@@ -25,9 +37,12 @@ const CONFIG_FILE_NAME = 'config.json';
 const HISTORY_FILE_NAME = 'codex-history.json';
 const SETTINGS_FILE_NAME = 'codex-settings.json';
 const LAUNCH_STATE_FILE_NAME = 'launch-state.json';
+const USER_PROJECTS_FILE_NAME = 'user-projects.json';
 const MANAGED_AGENT_MARKER = '<!-- Managed by Codex VDS Launcher -->';
 const MAX_MARKDOWN_INSTRUCTION_BYTES = 256 * 1024;
 const ALLOWED_CODEX_COMMANDS = new Set(['codex', 'codex-vpn']);
+const GITHUB_OWNER = 'gregkorneev';
+const GITHUB_REPO = 'codex-vds-launcher';
 const RENDERER_ASSETS_DIR = path.join(__dirname, 'renderer', 'assets');
 const APP_ICON_PATH = path.join(RENDERER_ASSETS_DIR, 'app-icon.png');
 const TRAY_ICON_PATH = path.join(RENDERER_ASSETS_DIR, 'tray-iconTemplate@2x.png');
@@ -96,6 +111,7 @@ const DEFAULT_AGENT_INSTRUCTIONS = [
 const DEFAULT_CONFIG = {
   sshAlias: 'my-vds',
   codexCommand: 'codex',
+  projectsRoot: '/opt',
   projects: [
     {
       id: 'root',
@@ -123,12 +139,14 @@ let updateState = {
   currentVersion: APP_VERSION,
   displayVersion: DISPLAY_VERSION,
   releaseName: RELEASE_NAME,
+  updateMode: 'unavailable',
   availableVersion: null,
   percent: null,
   message: ''
 };
 let updateCheckInProgress = false;
 let manualUpdateCheck = false;
+let availableUpdateUrl = null;
 
 function getUserDataDir() {
   try {
@@ -146,6 +164,14 @@ function ensureUserDataDir() {
 
 function getDataFilePath(fileName) {
   return path.join(ensureUserDataDir(), fileName);
+}
+
+function loadUserProjects(remoteRoot = DEFAULT_CONFIG.projectsRoot) {
+  return readProjects(getDataFilePath(USER_PROJECTS_FILE_NAME), { remoteRoot });
+}
+
+function saveUserProjects(projects, remoteRoot = DEFAULT_CONFIG.projectsRoot) {
+  return writeProjects(getDataFilePath(USER_PROJECTS_FILE_NAME), projects, { remoteRoot });
 }
 
 function readJsonFile(fileName, fallbackValue) {
@@ -197,7 +223,8 @@ function findInPath(commandName) {
   const pathEntries = (process.env.PATH || '').split(path.delimiter).filter(Boolean);
 
   for (const entry of pathEntries) {
-    const candidate = path.join(entry, commandName);
+    const cleanEntry = entry.replace(/^"|"$/g, '');
+    const candidate = path.join(cleanEntry, commandName);
 
     if (fileExists(candidate)) {
       return candidate;
@@ -205,6 +232,34 @@ function findInPath(commandName) {
   }
 
   return null;
+}
+
+function resolveCodexExecutable() {
+  const names = process.platform === 'win32' ? ['codex.exe', 'codex.cmd', 'codex.bat'] : ['codex'];
+  const candidates = names.map(findInPath).filter(Boolean);
+
+  if (process.platform === 'win32') {
+    if (process.env.APPDATA) candidates.push(path.join(process.env.APPDATA, 'npm', 'codex.cmd'));
+  } else {
+    const loginShell = process.env.SHELL || '/bin/zsh';
+    const resolved = spawnSync(loginShell, ['-lic', 'command -v codex'], {
+      encoding: 'utf8',
+      timeout: 5000
+    });
+    candidates.push(...String(resolved.stdout || '').split(/\r?\n/).filter((item) => path.isAbsolute(item.trim())));
+    candidates.push(
+      '/opt/homebrew/bin/codex',
+      '/usr/local/bin/codex',
+      path.join(os.homedir(), '.local', 'bin', 'codex')
+    );
+  }
+
+  const codexPath = candidates.find((candidate) => candidate && fileExists(candidate));
+  return {
+    ok: Boolean(codexPath),
+    path: codexPath || null,
+    error: codexPath ? '' : 'Local Codex CLI was not found. Install codex and make sure it is available in PATH.'
+  };
 }
 
 function resolveSshExecutable() {
@@ -320,6 +375,7 @@ function normalizeConfig(value = {}) {
     ? value.codexCommand
     : DEFAULT_CONFIG.codexCommand;
   const projects = normalizeProjects(value.projects);
+  const projectsRoot = validateUnixPath(value.projectsRoot) ? path.posix.resolve(value.projectsRoot) : DEFAULT_CONFIG.projectsRoot;
 
   if (value.sshAlias && !validateSshAlias(value.sshAlias)) {
     errors.push('Invalid sshAlias. Use letters, digits, dot, underscore, or dash.');
@@ -327,6 +383,10 @@ function normalizeConfig(value = {}) {
 
   if (value.codexCommand && !ALLOWED_CODEX_COMMANDS.has(value.codexCommand)) {
     errors.push(`Invalid codexCommand. Allowed values: ${Array.from(ALLOWED_CODEX_COMMANDS).join(', ')}.`);
+  }
+
+  if (value.projectsRoot && !validateUnixPath(value.projectsRoot)) {
+    errors.push('Invalid projectsRoot. Use an absolute Unix path.');
   }
 
   if (Array.isArray(value.projects) && projects.length !== value.projects.length) {
@@ -338,7 +398,11 @@ function normalizeConfig(value = {}) {
     path: getDataFilePath(CONFIG_FILE_NAME),
     sshAlias,
     codexCommand,
-    projects,
+    projectsRoot,
+    projects: [
+      ...projects.map((project) => ({ ...project, location: 'remote', custom: false })),
+      ...loadUserProjects(projectsRoot)
+    ],
     quickPrompts: normalizeQuickItems(value.quickPrompts, DEFAULT_QUICK_PROMPTS),
     validationErrors: errors
   };
@@ -404,6 +468,15 @@ function normalizePanelSettings(value = {}) {
   };
 }
 
+function normalizeSectionSettings(value = {}) {
+  return {
+    projects: value.projects !== false,
+    sessions: value.sessions !== false,
+    appearance: value.appearance !== false,
+    status: value.status !== false
+  };
+}
+
 function normalizeAgentInstructions(value) {
   const text = typeof value === 'string' ? value.trim() : '';
   return text ? text.slice(0, 24000) : DEFAULT_AGENT_INSTRUCTIONS;
@@ -416,12 +489,13 @@ function normalizeSettings(value = {}) {
   const accentColor = allowedAccentColors.has(value.accentColor) ? value.accentColor : 'blue';
 
   return {
-    version: 5,
+    version: 6,
     updatedAt: typeof value.updatedAt === 'string' ? value.updatedAt : null,
     language,
     theme,
     accentColor,
     panels: normalizePanelSettings(value.panels),
+    sections: normalizeSectionSettings(value.sections),
     onboardingSeen: value.onboardingSeen === true,
     syncAgentInstructions: value.syncAgentInstructions !== false,
     agentInstructions: normalizeAgentInstructions(value.agentInstructions),
@@ -477,6 +551,71 @@ function saveQuickPrompts(quickPrompts) {
   return loadAppConfig();
 }
 
+async function listRemoteProjectFolders() {
+  const remoteRoot = getConfig().projectsRoot;
+  const quotedRoot = quoteForPosixShell(remoteRoot);
+  const result = await runSshCommand(
+    `find ${quotedRoot} -mindepth 1 -maxdepth 3 -type d ! -path '*/.*' -print 2>/dev/null | sort`
+  );
+
+  if (!result.ok) {
+    return { ok: false, folders: [], error: result.error || result.stderr || 'Could not list VDS folders.' };
+  }
+
+  const resolvedRoot = path.posix.resolve(remoteRoot);
+  const prefix = resolvedRoot === '/' ? '/' : `${resolvedRoot}/`;
+  const folders = [...new Set(result.stdout.split(/\r?\n/)
+    .map((item) => path.posix.resolve(item.trim()))
+    .filter((item) => item.startsWith(prefix)))].slice(0, 500);
+  return { ok: true, folders, root: remoteRoot };
+}
+
+async function selectLocalProjectFolder() {
+  const result = await dialog.showOpenDialog(mainWindow || undefined, {
+    title: 'Select a local Codex project folder',
+    properties: ['openDirectory', 'createDirectory']
+  });
+  if (result.canceled || !result.filePaths[0]) return { ok: false, canceled: true, path: '' };
+  return { ok: true, path: path.resolve(result.filePaths[0]) };
+}
+
+async function addUserProject(value = {}) {
+  const config = getConfig();
+  const location = value.location === 'local' ? 'local' : 'remote';
+  const project = normalizeUserProject({
+    id: `custom-${randomUUID().replaceAll('-', '')}`,
+    name: value.name,
+    path: value.path,
+    location
+  }, { remoteRoot: config.projectsRoot });
+
+  if (!project) return { ok: false, error: 'Check the project name and folder.' };
+
+  if (location === 'local') {
+    try {
+      if (!fs.statSync(project.path).isDirectory()) return { ok: false, error: 'The local folder is unavailable.' };
+    } catch (_error) {
+      return { ok: false, error: 'The local folder is unavailable.' };
+    }
+  } else {
+    const folders = await listRemoteProjectFolders();
+    if (!folders.ok) return folders;
+    if (!folders.folders.includes(project.path)) return { ok: false, error: 'The selected VDS folder is unavailable.' };
+  }
+
+  if (config.projects.some((item) => item.name.toLowerCase() === project.name.toLowerCase())) {
+    return { ok: false, error: 'A project with this name already exists.' };
+  }
+  if (config.projects.some((item) => item.location === project.location && item.path === project.path)) {
+    return { ok: false, error: 'This folder is already added.' };
+  }
+
+  saveUserProjects([...loadUserProjects(config.projectsRoot), project], config.projectsRoot);
+  const nextConfig = loadAppConfig();
+  setupApplicationMenu();
+  return { ok: true, project, config: nextConfig };
+}
+
 function sendToRenderer(channel, payload) {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send(channel, payload);
@@ -505,7 +644,28 @@ function updaterMessage(error) {
     return '';
   }
 
-  return error.message || String(error);
+  return String(error.message || error).split(/\r?\n/, 1)[0].slice(0, 500);
+}
+
+function getUpdateMode() {
+  let signatureStatus = null;
+  let signatureDetails = '';
+
+  if (app.isPackaged && process.platform === 'darwin') {
+    const signature = spawnSync('/usr/bin/codesign', ['-dv', '--verbose=4', process.execPath], {
+      encoding: 'utf8',
+      timeout: 5000
+    });
+    signatureStatus = signature.status;
+    signatureDetails = `${signature.stdout || ''}\n${signature.stderr || ''}`;
+  }
+
+  return determineUpdateMode({
+    isPackaged: app.isPackaged,
+    platform: process.platform,
+    signatureStatus,
+    signatureDetails
+  });
 }
 
 function configureAutoUpdater() {
@@ -520,36 +680,44 @@ function configureAutoUpdater() {
       status: 'checking',
       availableVersion: null,
       percent: null,
-      message: 'Проверяем обновления...'
+      message: ''
     });
   });
 
   autoUpdater.on('update-available', (info) => {
+    const availableVersion = info?.version || null;
+    const updateMode = getUpdateMode();
+    availableUpdateUrl = availableVersion
+      ? releaseUrlForVersion(availableVersion, GITHUB_OWNER, GITHUB_REPO)
+      : null;
     updateStatus({
-      status: 'downloading',
-      availableVersion: info?.version || null,
-      percent: 0,
-      message: `Найдена версия ${info?.version || 'обновления'}. Скачиваем...`
+      status: 'available',
+      availableVersion,
+      updateMode,
+      percent: null,
+      message: ''
     });
+    updateCheckInProgress = false;
+    manualUpdateCheck = false;
 
-    autoUpdater.downloadUpdate().catch((error) => {
-      updateCheckInProgress = false;
-      manualUpdateCheck = false;
-      updateStatus({
-        status: 'error',
-        percent: null,
-        message: updaterMessage(error)
+    if (updateMode === 'automatic') {
+      updateStatus({ status: 'downloading', percent: 0, message: '' });
+      autoUpdater.downloadUpdate().catch((error) => {
+        availableUpdateUrl = null;
+        updateStatus({ status: 'error', percent: null, message: updaterMessage(error) });
       });
-    });
+    }
   });
 
   autoUpdater.on('update-not-available', () => {
     updateCheckInProgress = false;
+    availableUpdateUrl = null;
     updateStatus({
       status: 'latest',
       availableVersion: null,
+      updateMode: getUpdateMode(),
       percent: null,
-      message: 'У вас установлена последняя версия.'
+      message: ''
     });
 
     if (manualUpdateCheck) {
@@ -568,18 +736,19 @@ function configureAutoUpdater() {
     updateStatus({
       status: 'downloading',
       percent: Math.max(0, Math.min(100, Number(progress.percent) || 0)),
-      message: `Скачиваем обновление: ${Math.round(Number(progress.percent) || 0)}%`
+      message: ''
     });
   });
 
   autoUpdater.on('update-downloaded', (info) => {
     updateCheckInProgress = false;
     manualUpdateCheck = false;
+    availableUpdateUrl = null;
     updateStatus({
       status: 'downloaded',
       availableVersion: info?.version || updateState.availableVersion,
       percent: 100,
-      message: 'Обновление скачано и готово к установке.'
+      message: ''
     });
 
     dialog.showMessageBox(mainWindow || undefined, {
@@ -600,6 +769,7 @@ function configureAutoUpdater() {
   autoUpdater.on('error', (error) => {
     updateCheckInProgress = false;
     const message = updaterMessage(error);
+    availableUpdateUrl = null;
     updateStatus({
       status: 'error',
       percent: null,
@@ -619,12 +789,35 @@ function configureAutoUpdater() {
   });
 }
 
+async function installAvailableUpdate() {
+  if (updateState.status !== 'available' || !updateState.availableVersion) {
+    return { ok: false, state: updateState, error: 'No update is available.' };
+  }
+
+  if (getUpdateMode() === 'manual-download') {
+    if (!availableUpdateUrl || !isAllowedReleaseUrl(availableUpdateUrl, GITHUB_OWNER, GITHUB_REPO)) {
+      return { ok: false, state: updateState, error: 'The release URL was rejected.' };
+    }
+    await shell.openExternal(availableUpdateUrl);
+    return { ok: true, state: updateState, manual: true };
+  }
+
+  updateStatus({ status: 'downloading', percent: 0, message: '' });
+  try {
+    await autoUpdater.downloadUpdate();
+    return { ok: true, state: updateState, manual: false };
+  } catch (error) {
+    const state = updateStatus({ status: 'error', percent: null, message: updaterMessage(error) });
+    return { ok: false, state, error: state.message };
+  }
+}
+
 async function checkForUpdates({ manual = false } = {}) {
   if (!app.isPackaged) {
     const state = updateStatus({
       status: 'unsupported',
       percent: null,
-      message: 'Обновления доступны только в установленной сборке приложения.'
+      message: ''
     });
 
     if (manual) {
@@ -857,6 +1050,34 @@ function buildTargetLaunchCommand(project, settings = loadSettings()) {
   return commands.join('\n');
 }
 
+function syncLocalAgentFile(project, settings) {
+  if (!settings.syncAgentInstructions) return { ok: true };
+  const agentPath = path.join(project.path, 'AGENTS.md');
+
+  try {
+    if (fs.existsSync(agentPath)) {
+      const current = fs.readFileSync(agentPath, 'utf8');
+      if (!current.split(/\r?\n/).includes(MANAGED_AGENT_MARKER)) {
+        return { ok: true, warning: 'AGENTS.md was not changed because it is not managed by this app.' };
+      }
+    }
+    fs.writeFileSync(agentPath, buildAgentFileText(settings), { encoding: 'utf8', mode: 0o600 });
+    return { ok: true };
+  } catch (error) {
+    return { ok: true, warning: `AGENTS.md was not changed: ${error.message || String(error)}` };
+  }
+}
+
+function localTerminalSpawnSpec(codexPath) {
+  if (process.platform === 'win32' && /\.(?:cmd|bat)$/i.test(codexPath)) {
+    return {
+      command: process.env.ComSpec || 'cmd.exe',
+      args: ['/d', '/s', '/c', `"${codexPath.replace(/"/g, '""')}"`]
+    };
+  }
+  return { command: codexPath, args: [] };
+}
+
 function buildDiagnosticCommand(checkId, projectId) {
   const config = getConfig();
   const project = getProject(projectId) || config.projects[0];
@@ -867,7 +1088,7 @@ function buildDiagnosticCommand(checkId, projectId) {
     case 'ssh':
       return ':';
     case 'remote-info':
-      return 'printf "user: "; whoami; printf "host: "; hostname; printf "pwd: "; pwd';
+      return 'printf "user: "; whoami; printf "host: "; hostname; printf "ip: "; hostname -I 2>/dev/null || true; printf "pwd: "; pwd';
     case 'codex-command':
       return `command -v ${codexCommand}`;
     case 'vpn-command':
@@ -1071,6 +1292,16 @@ function openTerminalWithSsh(remoteCommand) {
 }
 
 function openProjectInTerminal(project) {
+  if (project.location === 'local') {
+    const codex = resolveCodexExecutable();
+    if (!codex.ok) return Promise.resolve({ ok: false, error: codex.error });
+    const sync = syncLocalAgentFile(project, loadSettings());
+    if (!sync.ok) return Promise.resolve(sync);
+    const command = process.platform === 'win32'
+      ? `cd /d "${project.path.replace(/"/g, '""')}" && "${codex.path.replace(/"/g, '""')}"`
+      : `cd ${quoteForPosixShell(project.path)} && ${quoteForPosixShell(codex.path)}`;
+    return openTerminal(command);
+  }
   return openTerminalWithSsh(buildTargetLaunchCommand(project, loadSettings()));
 }
 
@@ -1099,48 +1330,53 @@ function startTerminalSession(event, projectId) {
 
   const sessionId = `${projectId}-${Date.now()}-${nextSessionNumber++}`;
   const webContents = event.sender;
-  const ssh = resolveSshExecutable();
-  const setup = getSshSetupStatus();
-  const remoteCommand = buildTargetLaunchCommand(project, loadSettings());
   let terminal = null;
-
-  if (!ssh.ok) {
-    return {
-      ok: false,
-      error: ssh.error
-    };
-  }
-
-  if (!setup.ok) {
-    return {
-      ok: false,
-      error: setup.error
-    };
-  }
-
-  const sshArgs = [
-    '-tt',
-    '-o',
-    'BatchMode=yes',
-    '-o',
-    `ConnectTimeout=${SSH_CONNECT_TIMEOUT_SECONDS}`,
-    config.sshAlias,
-    remoteCommand
-  ];
+  let warning = '';
 
   try {
-    terminal = pty.spawn(ssh.path, sshArgs, {
-      name: 'xterm-256color',
-      cols: DEFAULT_COLS,
-      rows: DEFAULT_ROWS,
-      cwd: os.homedir(),
-      env: { ...process.env, TERM: 'xterm-256color' }
-    });
+    if (project.location === 'local') {
+      const codex = resolveCodexExecutable();
+      if (!codex.ok) return { ok: false, error: codex.error };
+      const sync = syncLocalAgentFile(project, loadSettings());
+      warning = sync.warning || '';
+      const spec = localTerminalSpawnSpec(codex.path);
+      terminal = pty.spawn(spec.command, spec.args, {
+        name: 'xterm-256color',
+        cols: DEFAULT_COLS,
+        rows: DEFAULT_ROWS,
+        cwd: project.path,
+        env: { ...process.env, TERM: 'xterm-256color' }
+      });
+    } else {
+      const ssh = resolveSshExecutable();
+      const setup = getSshSetupStatus();
+      if (!ssh.ok) return { ok: false, error: ssh.error };
+      if (!setup.ok) return { ok: false, error: setup.error };
+      terminal = pty.spawn(ssh.path, [
+        '-tt',
+        '-o',
+        'BatchMode=yes',
+        '-o',
+        `ConnectTimeout=${SSH_CONNECT_TIMEOUT_SECONDS}`,
+        config.sshAlias,
+        buildTargetLaunchCommand(project, loadSettings())
+      ], {
+        name: 'xterm-256color',
+        cols: DEFAULT_COLS,
+        rows: DEFAULT_ROWS,
+        cwd: os.homedir(),
+        env: { ...process.env, TERM: 'xterm-256color' }
+      });
+    }
   } catch (error) {
     return {
       ok: false,
       error: error.message || String(error)
     };
+  }
+
+  if (!terminal) {
+    return { ok: false, error: 'Could not start the terminal session.' };
   }
 
   const session = {
@@ -1172,8 +1408,10 @@ function startTerminalSession(event, projectId) {
     projectId,
     title: project.name,
     remotePath: project.path,
-    sshAlias: config.sshAlias,
-    codexCommand: config.codexCommand
+    location: project.location,
+    sshAlias: project.location === 'local' ? null : config.sshAlias,
+    codexCommand: project.location === 'local' ? 'codex' : config.codexCommand,
+    warning
   };
 }
 
@@ -1297,7 +1535,7 @@ function setupApplicationMenu() {
         { label: 'Перезагрузить config.json', accelerator: 'CmdOrCtrl+R', click: () => sendUiCommand('reload-config') },
         { label: 'Скопировать пример SSH config', click: () => sendUiCommand('copy-ssh-config') },
         { type: 'separator' },
-        { label: 'Проверить SSH', click: () => sendUiCommand('run-ssh-check') }
+        { label: 'Добавить проект', click: () => sendUiCommand('add-project') }
       ]
     },
     {
@@ -1319,6 +1557,15 @@ function setupApplicationMenu() {
         { label: 'Показать/скрыть правую панель', click: () => sendUiCommand('toggle-right-panel') },
         { type: 'separator' },
         { label: 'Полный экран', role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Инструменты',
+      submenu: [
+        { label: 'Выполнить Markdown-инструкцию', click: () => sendUiCommand('run-markdown') },
+        { label: 'Настроить AGENTS.md', click: () => sendUiCommand('edit-agents') },
+        { type: 'separator' },
+        { label: 'Переключить светлую/тёмную тему', click: () => sendUiCommand('toggle-theme') }
       ]
     },
     {
@@ -1431,6 +1678,17 @@ function registerHandlers() {
   });
   ipcMain.handle('ssh:setupStatus', () => getSshSetupStatus());
   ipcMain.handle('diagnostic:run', (_event, checkId, projectId) => runDiagnostic(checkId, projectId));
+  ipcMain.handle('projects:listRemoteFolders', () => listRemoteProjectFolders());
+  ipcMain.handle('projects:selectLocalFolder', () => selectLocalProjectFolder());
+  ipcMain.handle('projects:add', async (_event, project) => {
+    const result = await addUserProject(project);
+    if (result.ok) {
+      const history = loadHistory();
+      sendToRenderer('config:changed', { config: result.config, history });
+      return { ...result, history };
+    }
+    return result;
+  });
 
   ipcMain.handle('terminal:start', startTerminalSession);
   ipcMain.handle('terminal:write', (_event, sessionId, data) => writeTerminalSession(sessionId, data));
@@ -1462,6 +1720,7 @@ function registerHandlers() {
   ipcMain.handle('markdown:readInstructionFile', (_event, filePath) => readMarkdownInstructionFile(filePath));
   ipcMain.handle('updates:status', () => updateState);
   ipcMain.handle('updates:check', () => checkForUpdates({ manual: true }));
+  ipcMain.handle('updates:install', () => installAvailableUpdate());
 }
 
 app.whenReady().then(() => {
@@ -1469,11 +1728,16 @@ app.whenReady().then(() => {
   showVersionWelcomeOnLoad = shouldShowVersionWelcome();
   configureAboutPanel();
   configureAutoUpdater();
+  updateStatus({ updateMode: getUpdateMode() });
   loadAppConfig();
   registerHandlers();
   setupApplicationMenu();
   createWindow();
   createTray();
+
+  if (app.isPackaged) {
+    setTimeout(() => checkForUpdates().catch(() => {}), 5000);
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

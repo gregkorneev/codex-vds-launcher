@@ -7,6 +7,9 @@ contextBridge.exposeInMainWorld('codexVdsLauncher', {
   getSshConfigExample: () => ipcRenderer.invoke('config:sshExample'),
   saveQuickPrompts: (quickPrompts) => ipcRenderer.invoke('config:saveQuickPrompts', quickPrompts),
   getSshSetupStatus: () => ipcRenderer.invoke('ssh:setupStatus'),
+  listRemoteProjectFolders: () => ipcRenderer.invoke('projects:listRemoteFolders'),
+  selectLocalProjectFolder: () => ipcRenderer.invoke('projects:selectLocalFolder'),
+  addProject: (project) => ipcRenderer.invoke('projects:add', project),
   runDiagnostic: (checkId, projectId) => ipcRenderer.invoke('diagnostic:run', checkId, projectId),
   terminalStart: (projectId) => ipcRenderer.invoke('terminal:start', projectId),
   terminalWrite: (sessionId, data) => ipcRenderer.invoke('terminal:write', sessionId, data),
@@ -26,6 +29,7 @@ contextBridge.exposeInMainWorld('codexVdsLauncher', {
   readMarkdownInstructionFile: (filePath) => ipcRenderer.invoke('markdown:readInstructionFile', filePath),
   getUpdateStatus: () => ipcRenderer.invoke('updates:status'),
   checkForUpdates: () => ipcRenderer.invoke('updates:check'),
+  installUpdate: () => ipcRenderer.invoke('updates:install'),
   getPathForFile: (file) => webUtils.getPathForFile(file),
   onTerminalData: (callback) => {
     const listener = (_event, payload) => callback(payload);

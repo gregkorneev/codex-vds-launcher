@@ -1,20 +1,23 @@
 # Codex VDS Launcher
 
-Desktop launcher for running Codex CLI on your VDS over SSH.
+Desktop launcher for running Codex CLI locally or on your VDS over SSH.
 
 Русский раздел находится ниже: [Русский](#русский).
 
 ## English
 
-Codex VDS Launcher is a local Electron app with an embedded xterm.js terminal. It starts Codex CLI on a remote server through a user-managed OpenSSH alias, keeps local terminal history, supports quick prompts, imports local Markdown instructions, and can sync a managed `AGENTS.md` into the selected remote project.
+Codex VDS Launcher is an Electron app with an embedded xterm.js terminal. It can start an installed Codex CLI in a local project folder or run Codex on a remote server through a user-managed OpenSSH alias.
 
 ### Status
 
-Developer beta. Current build: **Codex VDS Launcher Developer Beta 4.1**.
+Developer beta. Current build: **Codex VDS Launcher Developer Beta 5**.
 
 ### Features
 
 - Embedded xterm.js terminal backed by `node-pty`.
+- Local Codex CLI sessions with a native project-folder picker.
+- Custom local and VDS projects from the `＋` button, stored separately in `user-projects.json`.
+- Isolated Web/PWA project storage at `profiles/<profile>/projects.json`.
 - User-configured SSH alias, Codex command, and remote project list.
 - UI language switcher: Russian and English.
 - First-launch onboarding and a reusable VDS connection guide with Codex CLI installation steps.
@@ -27,7 +30,8 @@ Developer beta. Current build: **Codex VDS Launcher Developer Beta 4.1**.
 - Local Markdown instruction import by picker or drag-and-drop.
 - Local terminal history per `project.id`.
 - Tray menu.
-- Collapsible server status and diagnostics.
+- Persistent collapsible Projects, Sessions, Appearance, and Server Status sections.
+- Compact read-only VDS/SSH/Codex/VPN status cards; the separate Diagnostics UI was removed.
 
 Beta artifacts are named **Codex VDS Launcher Beta**. Stable release artifacts
 should be named **Codex VDS Launcher**.
@@ -36,7 +40,8 @@ should be named **Codex VDS Launcher**.
 
 - macOS or Windows for the first development/testing stage.
 - Node.js 24 or compatible current Node.js.
-- OpenSSH client available as `ssh`.
+- OpenSSH client available as `ssh` for VDS sessions.
+- A local `codex` executable in `PATH` for local sessions.
 - A working SSH alias in `~/.ssh/config`.
 - `codex` installed on the VDS. `codex-vpn` is optional and should be used only if you created that wrapper yourself.
 
@@ -94,6 +99,7 @@ ssh my-vds
 {
   "sshAlias": "my-vds",
   "codexCommand": "codex",
+  "projectsRoot": "/opt",
   "projects": [
     {
       "id": "root",
@@ -120,6 +126,7 @@ Validation rules:
 
 - `sshAlias` must be a simple OpenSSH alias using letters, digits, dot, underscore, or dash.
 - `codexCommand` must be `codex` or `codex-vpn`. Use `codex` by default; `codex-vpn` is only an optional custom wrapper.
+- `projectsRoot` is the VDS directory whose descendants may be selected by the add-project dialog.
 - Every project must have a non-empty `id`, `name`, and an absolute Unix `path`.
 
 ### Security Notes
@@ -127,7 +134,7 @@ Validation rules:
 - Passwords, private SSH keys, OpenAI/API tokens, `.env` files, and server credentials are not stored by the app.
 - SSH access is owned by the user through normal OpenSSH configuration.
 - `BatchMode=yes` is always used so SSH will not ask for passwords in the embedded terminal.
-- Diagnostics are read-only.
+- Server status cards are read-only.
 - Local terminal history may contain sensitive output; clear it when needed.
 
 ### License
@@ -167,19 +174,22 @@ npm run publish:beta
 npm run publish:release
 ```
 
-Beta builds use the `beta` update channel and should be published as GitHub pre-releases. Stable builds use the `latest` channel and should be published as normal releases. Users can click **Update app** in the Customization panel; if no newer build exists, the app shows that the latest version is already installed.
+Beta builds use the `beta` update channel and stable builds use `latest`. Ad-hoc macOS packages open the exact official prerelease page for manual DMG installation; Windows and trusted macOS packages retain automatic installation.
 
 ## Русский
 
-Codex VDS Launcher — локальное Electron-приложение со встроенным терминалом xterm.js. Оно запускает Codex CLI на удалённом сервере через пользовательский OpenSSH alias, хранит локальную историю терминала, поддерживает быстрые промпты, импорт локальных Markdown-инструкций и синхронизацию управляемого `AGENTS.md` в выбранный удалённый проект.
+Codex VDS Launcher — Electron-приложение со встроенным терминалом xterm.js. Оно запускает установленный Codex CLI в локальной папке проекта или на удалённом сервере через пользовательский OpenSSH alias.
 
 ### Статус
 
-Developer beta. Текущая сборка: **Codex VDS Launcher Developer Beta 4.1**.
+Developer beta. Текущая сборка: **Codex VDS Launcher Developer Beta 5**.
 
 ### Возможности
 
 - Встроенный терминал xterm.js на `node-pty`.
+- Локальные Codex CLI-сессии с нативным выбором папки проекта.
+- Пользовательские локальные и VDS-проекты через кнопку `＋`, отдельно сохранённые в `user-projects.json`.
+- Изолированное хранилище проектов Web/PWA в `profiles/<profile>/projects.json`.
 - Пользовательский SSH alias, команда Codex и список удалённых проектов.
 - Переключение языка интерфейса: русский и английский.
 - Приветственный экран первого запуска и повторно доступная инструкция подключения к VDS с шагами установки Codex CLI.
@@ -192,7 +202,8 @@ Developer beta. Текущая сборка: **Codex VDS Launcher Developer Beta
 - Импорт локальных Markdown-инструкций через выбор файла или drag-and-drop.
 - Локальная история терминала по `project.id`.
 - Меню в системном трее.
-- Раскрываемые секции статуса сервера и диагностики.
+- Сворачиваемые разделы «Проекты», «Сессии», «Оформление» и «Статус сервера» с сохранением состояния.
+- Компактные read-only карточки VDS/SSH/Codex/VPN; отдельный интерфейс «Диагностика» удалён.
 
 Beta-артефакты называются **Codex VDS Launcher Beta**. Стабильные release-артефакты
 должны называться **Codex VDS Launcher**.
@@ -201,7 +212,8 @@ Beta-артефакты называются **Codex VDS Launcher Beta**. Ста
 
 - macOS или Windows для первого этапа разработки и тестирования.
 - Node.js 24 или совместимая актуальная версия Node.js.
-- OpenSSH client как команда `ssh`.
+- OpenSSH client как команда `ssh` для VDS-сессий.
+- Локальная команда `codex` в `PATH` для локальных сессий.
 - Рабочий SSH alias в `~/.ssh/config`.
 - `codex` на VDS. `codex-vpn` нужен только если вы сами создали такую обёртку.
 
@@ -259,6 +271,7 @@ ssh my-vds
 {
   "sshAlias": "my-vds",
   "codexCommand": "codex",
+  "projectsRoot": "/opt",
   "projects": [
     {
       "id": "root",
@@ -292,7 +305,7 @@ ssh my-vds
 - Приложение не хранит пароли, приватные SSH-ключи, OpenAI/API токены, `.env` файлы и серверные учётные данные.
 - SSH-доступом управляет пользователь через обычный OpenSSH config.
 - Всегда используется `BatchMode=yes`, поэтому SSH не спрашивает пароль во встроенном терминале.
-- Диагностика read-only.
+- Карточки статуса сервера выполняют только read-only проверки.
 - Локальная история терминала может содержать чувствительный вывод; очищайте её при необходимости.
 
 ### Лицензия
@@ -332,4 +345,4 @@ npm run publish:beta
 npm run publish:release
 ```
 
-Beta-сборки используют канал обновлений `beta` и должны публиковаться как GitHub pre-release. Стабильные сборки используют канал `latest` и публикуются как обычные releases. Пользователь может нажать **Обновить приложение** в панели кастомизации; если новой версии нет, приложение покажет сообщение, что установлена последняя версия.
+Beta-сборки используют канал `beta`, стабильные — `latest`. Ad-hoc macOS-сборка открывает страницу конкретного официального prerelease для ручной установки DMG; Windows и macOS со доверенной подписью сохраняют автоматическую установку.

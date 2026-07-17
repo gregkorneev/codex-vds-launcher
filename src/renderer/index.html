@@ -19,15 +19,18 @@
           </div>
         </header>
 
-        <section class="sidebar-section">
-          <h2 data-i18n="projects">Проекты</h2>
-          <div class="project-list" id="projectList"></div>
-        </section>
+        <details class="sidebar-section disclosure-section" data-section="projects" open>
+          <summary class="section-summary-with-action">
+            <span data-i18n="projects">Проекты</span>
+            <button type="button" class="mini-button add-button" id="addProject" title="Добавить проект" aria-label="Добавить проект" data-i18n-attr="title:addProject;aria-label:addProject">＋</button>
+          </summary>
+          <div class="project-list disclosure-content" id="projectList"></div>
+        </details>
 
-        <section class="sidebar-section sessions-section">
-          <h2 data-i18n="sessions">Сессии</h2>
-          <div class="session-list" id="sessionList"></div>
-        </section>
+        <details class="sidebar-section sessions-section disclosure-section" data-section="sessions" open>
+          <summary data-i18n="sessions">Сессии</summary>
+          <div class="session-list disclosure-content" id="sessionList"></div>
+        </details>
 
         <details class="sidebar-section disclosure-section" open>
           <summary data-i18n="vdsConfiguration">Конфигурация VDS</summary>
@@ -42,8 +45,8 @@
           </div>
         </details>
 
-        <details class="sidebar-section disclosure-section" open>
-          <summary data-i18n="customization">Кастомизация</summary>
+        <details class="sidebar-section disclosure-section" data-section="appearance" open>
+          <summary data-i18n="appearance">Оформление</summary>
           <div class="settings-list disclosure-content">
             <label class="field-label" for="languageSelect" data-i18n="language">Язык</label>
             <select class="select-control" id="languageSelect">
@@ -72,9 +75,6 @@
               <span data-i18n="syncAgents">Синхронизировать AGENTS.md</span>
             </label>
             <button type="button" class="secondary-button full-width-button" id="editAgentInstructions" data-i18n="configureAgents">Настроить AGENTS.md</button>
-            <button type="button" class="secondary-button full-width-button" id="updateApp" data-i18n="updateApp">Обновить приложение</button>
-            <p class="update-status" id="updateStatus" data-i18n="updateIdle">Обновления не проверялись</p>
-            <p class="version-note"><span data-i18n="versionLabel">Версия</span> <strong id="appVersionLabel">1 - beta 4.1 (1 - beta 4.1)</strong></p>
           </div>
         </details>
 
@@ -112,15 +112,22 @@
       </section>
 
       <aside class="right-panel" aria-label="Статусы и быстрые промпты" data-i18n-attr="aria-label:rightPanelLabel">
-        <details class="panel-section disclosure-section panel-disclosure" open>
+        <details class="panel-section disclosure-section panel-disclosure" data-section="status" open>
           <summary data-i18n="serverStatus">Статус сервера</summary>
           <div class="status-list disclosure-content" id="statusCards"></div>
         </details>
 
-        <details class="panel-section disclosure-section panel-disclosure" open>
-          <summary data-i18n="diagnostics">Диагностика</summary>
-          <div class="diagnostic-actions" id="diagnosticActions"></div>
-        </details>
+        <section class="panel-section">
+          <header class="panel-heading">
+            <h2 data-i18n="updates">Обновления</h2>
+          </header>
+          <div class="settings-list">
+            <button type="button" class="secondary-button full-width-button" id="checkUpdates" data-i18n="checkUpdates">Проверить обновления</button>
+            <button type="button" class="primary-button full-width-button" id="updateApp" data-i18n="updateApp" hidden>Обновить приложение</button>
+            <p class="update-status" id="updateStatus" data-i18n="updateIdle">Обновления не проверялись</p>
+            <p class="version-note"><span data-i18n="versionLabel">Версия</span> <strong id="appVersionLabel">1 - beta 5 (1 - beta 5)</strong></p>
+          </div>
+        </section>
 
         <section class="panel-section">
           <header class="panel-heading">
@@ -149,6 +156,39 @@
         </section>
       </aside>
     </main>
+
+    <dialog class="item-dialog" id="projectDialog">
+      <form class="dialog-card" id="projectForm">
+        <header class="dialog-heading">
+          <h2 data-i18n="addProject">Добавить проект</h2>
+          <button type="button" class="mini-button" id="cancelProject" title="Закрыть" aria-label="Закрыть" data-i18n-attr="title:close;aria-label:close">×</button>
+        </header>
+
+        <label class="field-label" for="projectLocation" data-i18n="projectLocation">Где запустить Codex</label>
+        <select class="select-control" id="projectLocation">
+          <option value="remote" data-i18n="projectRemote">На VDS</option>
+          <option value="local" data-i18n="projectLocal">На этом компьютере</option>
+        </select>
+
+        <label class="field-label" for="projectName" data-i18n="projectName">Название проекта</label>
+        <input class="text-control" id="projectName" maxlength="100" required>
+
+        <div id="remoteFolderField">
+          <label class="field-label" for="projectRemoteFolder" data-i18n="projectFolder">Папка проекта</label>
+          <select class="select-control" id="projectRemoteFolder" required></select>
+        </div>
+        <div id="localFolderField" hidden>
+          <button type="button" class="secondary-button full-width-button" id="selectLocalFolder" data-i18n="selectLocalFolder">Выбрать локальную папку</button>
+          <p class="config-path" id="projectLocalPath"></p>
+        </div>
+        <p class="config-status error-text" id="projectError"></p>
+
+        <footer class="dialog-actions">
+          <button type="button" class="secondary-button" id="cancelProjectFooter" data-i18n="cancel">Отмена</button>
+          <button type="submit" class="primary-button" data-i18n="add">Добавить</button>
+        </footer>
+      </form>
+    </dialog>
 
     <dialog class="item-dialog" id="quickItemDialog">
       <form class="dialog-card" id="quickItemForm">
@@ -192,7 +232,7 @@
       <form class="dialog-card guide-card" method="dialog">
         <header class="dialog-heading">
           <div>
-            <p class="dialog-kicker" id="setupGuideKicker">Codex VDS Launcher Developer Beta 4.1</p>
+            <p class="dialog-kicker" id="setupGuideKicker">Codex VDS Launcher Developer Beta 5</p>
             <h2 id="setupGuideTitle">Настройка подключения к VDS</h2>
           </div>
           <button type="button" class="mini-button" id="closeSetupGuide" title="Закрыть" aria-label="Закрыть" data-i18n-attr="title:close;aria-label:close">×</button>

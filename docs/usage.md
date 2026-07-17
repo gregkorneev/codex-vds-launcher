@@ -57,6 +57,7 @@ On first launch the app creates `config.json` in Electron user data. Use **Open 
 {
   "sshAlias": "my-vds",
   "codexCommand": "codex",
+  "projectsRoot": "/opt",
   "projects": [
     {
       "id": "root",
@@ -81,13 +82,15 @@ On first launch the app creates `config.json` in Electron user data. Use **Open 
 
 ### Language And Customization
 
-Open **Customization** to switch between Russian and English, choose light/dark theme, and pick one of the accent colors.
+Open **Appearance** to switch between Russian and English, choose light/dark theme, and pick one of the accent colors.
 
 These preferences are stored locally in `codex-settings.json`.
 
 ### Add Projects
 
-Add entries to `projects`:
+Use the `＋` button to add a project. VDS folders come from a main-process-validated list inside `projectsRoot`; local folders use the native directory picker. Custom projects are stored in `user-projects.json`, separately from built-in `config.json` projects.
+
+Built-in VDS projects can still be added to `projects`:
 
 ```json
 {
@@ -119,11 +122,13 @@ Other values are rejected. `codex-vpn` is not installed by this app and is not r
 
 ### Start A Session
 
-Select a project and press the play button. The remote launch command is built from validated config values:
+Select a project and press the play button. A VDS project uses the validated SSH command:
 
 ```bash
 ssh -tt -o BatchMode=yes -o ConnectTimeout=15 my-vds "cd /opt/app && codex"
 ```
+
+A local project starts the `codex` executable found in `PATH` with the selected folder as its working directory. The same embedded terminal, history, quick prompts, Markdown instructions, and managed `AGENTS.md` behavior are available in both modes.
 
 If AGENTS sync is enabled, the app updates `AGENTS.md` before starting Codex. It will not overwrite an existing file unless it contains:
 
@@ -141,9 +146,9 @@ Use **Run Markdown** or drag a `.md` / `.markdown` file into the drop zone. The 
 
 Maximum file size is 256 KB.
 
-### Diagnostics
+### Server Status
 
-Diagnostics are read-only: SSH check, remote identity, command availability, server health, Git status, and Docker state.
+Compact status cards run read-only VDS, SSH, Codex, and VPN checks. The separate Diagnostics section and menu were removed.
 
 ### Troubleshooting
 
@@ -208,6 +213,7 @@ ssh my-vds
 {
   "sshAlias": "my-vds",
   "codexCommand": "codex",
+  "projectsRoot": "/opt",
   "projects": [
     {
       "id": "root",
@@ -232,13 +238,15 @@ ssh my-vds
 
 ### Язык и кастомизация
 
-Откройте **Кастомизация**, чтобы переключить язык: русский или английский, выбрать светлую/тёмную тему и акцентный цвет.
+Откройте **Оформление**, чтобы переключить язык: русский или английский, выбрать светлую/тёмную тему и акцентный цвет.
 
 Эти настройки хранятся локально в `codex-settings.json`.
 
 ### Добавление проектов
 
-Добавьте записи в `projects`:
+Используйте кнопку `＋`: VDS-папки берутся только из проверенного main process списка внутри `projectsRoot`, локальные папки выбираются нативным диалогом. Пользовательские проекты сохраняются отдельно в `user-projects.json`.
+
+Встроенные VDS-проекты по-прежнему можно задать в `projects`:
 
 ```json
 {
@@ -270,11 +278,13 @@ ssh my-vds
 
 ### Запуск сессии
 
-Выберите проект и нажмите кнопку запуска. Удалённая команда строится из валидированных значений:
+Выберите проект и нажмите кнопку запуска. Для VDS команда строится из валидированных значений:
 
 ```bash
 ssh -tt -o BatchMode=yes -o ConnectTimeout=15 my-vds "cd /opt/app && codex"
 ```
+
+Для локального проекта приложение находит `codex` в `PATH` и запускает его с выбранной папкой как рабочим каталогом. В обоих режимах доступны встроенный терминал, история, быстрые промпты, Markdown-инструкции и управляемый `AGENTS.md`.
 
 Если синхронизация AGENTS включена, приложение обновляет `AGENTS.md` перед запуском Codex. Существующий файл не будет перезаписан, если в нём нет маркера:
 
@@ -292,9 +302,9 @@ ssh -tt -o BatchMode=yes -o ConnectTimeout=15 my-vds "cd /opt/app && codex"
 
 Максимальный размер файла — 256 KB.
 
-### Диагностика
+### Статус сервера
 
-Диагностика read-only: SSH check, удалённая идентичность, наличие команд, здоровье сервера, Git status и состояние Docker.
+Компактные карточки выполняют read-only проверки VDS, SSH, Codex и VPN. Отдельные раздел и меню «Диагностика» удалены.
 
 ### Troubleshooting
 

@@ -1,7 +1,7 @@
-const DISPLAY_VERSION = '1 - beta 4.1 (1 - beta 4.1)';
-const RELEASE_NAME = 'Codex VDS Launcher Developer Beta 4.1';
+const DISPLAY_VERSION = '1 - beta 5 (1 - beta 5)';
+const RELEASE_NAME = 'Codex VDS Launcher Developer Beta 5';
 
-const DIAGNOSTICS = [
+const STATUS_CHECKS = [
   {
     id: 'ssh',
     labelKey: 'diagSsh',
@@ -21,21 +21,6 @@ const DIAGNOSTICS = [
     id: 'vpn-command',
     labelKey: 'diagVpnCommand',
     target: 'card'
-  },
-  {
-    id: 'server-health',
-    labelKey: 'diagServerHealth',
-    target: 'terminal'
-  },
-  {
-    id: 'git-status',
-    labelKey: 'diagGitStatus',
-    target: 'terminal'
-  },
-  {
-    id: 'docker-compose',
-    labelKey: 'diagDockerCompose',
-    target: 'terminal'
   }
 ];
 
@@ -73,6 +58,14 @@ const TRANSLATIONS = {
     brandSubtitle: 'SSH-лаунчер для Codex CLI',
     projects: 'Проекты',
     sessions: 'Сессии',
+    addProject: 'Добавить проект',
+    add: 'Добавить',
+    projectLocation: 'Где запустить Codex',
+    projectRemote: 'На VDS',
+    projectLocal: 'На этом компьютере',
+    projectName: 'Название проекта',
+    projectFolder: 'Папка проекта',
+    selectLocalFolder: 'Выбрать локальную папку',
     config: 'Конфиг',
     vdsConfiguration: 'Конфигурация VDS',
     configLoading: 'config.json загружается',
@@ -93,6 +86,9 @@ const TRANSLATIONS = {
     syncAgents: 'Синхронизировать AGENTS.md',
     configureAgents: 'Настроить AGENTS.md',
     updateApp: 'Обновить приложение',
+    updates: 'Обновления',
+    checkUpdates: 'Проверить обновления',
+    updateAvailable: 'Доступна новая версия',
     updateIdle: 'Обновления не проверялись',
     updateChecking: 'Проверяем обновления...',
     updateDownloading: 'Скачиваем обновление',
@@ -115,7 +111,6 @@ const TRANSLATIONS = {
     embeddedTerminal: 'Встроенный терминал Codex',
     rightPanelLabel: 'Статусы и быстрые промпты',
     serverStatus: 'Статус сервера',
-    diagnostics: 'Диагностика',
     localMd: 'Локальные MD',
     runMarkdown: 'Выполнить Markdown',
     dropMarkdown: 'Перетащите .md сюда',
@@ -154,10 +149,10 @@ const TRANSLATIONS = {
     noOutput: 'Нет вывода.',
     running: 'Выполняется...',
     readOnlyRunning: 'Выполняется read-only проверка...',
-    diagSsh: 'SSH check',
-    diagRemoteInfo: 'Remote whoami/hostname/pwd',
-    diagCodexCommand: 'Проверка команды Codex',
-    diagVpnCommand: 'Проверка codex-vpn (опционально)',
+    diagSsh: 'VDS / SSH',
+    diagRemoteInfo: 'VDS IP / host',
+    diagCodexCommand: 'Codex CLI на VDS',
+    diagVpnCommand: 'VPN / codex-vpn',
     diagServerHealth: 'Здоровье сервера',
     diagGitStatus: 'Git status текущего проекта',
     diagDockerCompose: 'Docker compose check',
@@ -197,6 +192,14 @@ const TRANSLATIONS = {
     brandSubtitle: 'SSH launcher for Codex CLI',
     projects: 'Projects',
     sessions: 'Sessions',
+    addProject: 'Add project',
+    add: 'Add',
+    projectLocation: 'Where to run Codex',
+    projectRemote: 'On the VDS',
+    projectLocal: 'On this computer',
+    projectName: 'Project name',
+    projectFolder: 'Project folder',
+    selectLocalFolder: 'Select local folder',
     config: 'Config',
     vdsConfiguration: 'VDS Configuration',
     configLoading: 'Loading config.json',
@@ -217,6 +220,9 @@ const TRANSLATIONS = {
     syncAgents: 'Sync AGENTS.md',
     configureAgents: 'Configure AGENTS.md',
     updateApp: 'Update app',
+    updates: 'Updates',
+    checkUpdates: 'Check for updates',
+    updateAvailable: 'A new version is available',
     updateIdle: 'Updates have not been checked',
     updateChecking: 'Checking for updates...',
     updateDownloading: 'Downloading update',
@@ -239,7 +245,6 @@ const TRANSLATIONS = {
     embeddedTerminal: 'Embedded Codex terminal',
     rightPanelLabel: 'Status and quick prompts',
     serverStatus: 'Server status',
-    diagnostics: 'Diagnostics',
     localMd: 'Local MD',
     runMarkdown: 'Run Markdown',
     dropMarkdown: 'Drop .md here',
@@ -278,10 +283,10 @@ const TRANSLATIONS = {
     noOutput: 'No output.',
     running: 'Running...',
     readOnlyRunning: 'Running read-only check...',
-    diagSsh: 'SSH check',
-    diagRemoteInfo: 'Remote whoami/hostname/pwd',
-    diagCodexCommand: 'Codex command check',
-    diagVpnCommand: 'codex-vpn wrapper check (optional)',
+    diagSsh: 'VDS / SSH',
+    diagRemoteInfo: 'VDS IP / host',
+    diagCodexCommand: 'Codex CLI on VDS',
+    diagVpnCommand: 'VPN / codex-vpn',
     diagServerHealth: 'Server health',
     diagGitStatus: 'Git status current project',
     diagDockerCompose: 'Docker compose check',
@@ -337,7 +342,6 @@ const codexCommandHelp = document.querySelector('#codexCommandHelp');
 const quickPrompts = document.querySelector('#quickPrompts');
 const quickCommandSets = document.querySelector('#quickCommandSets');
 const statusCards = document.querySelector('#statusCards');
-const diagnosticActions = document.querySelector('#diagnosticActions');
 const startSessionButton = document.querySelector('#startSession');
 const stopSessionButton = document.querySelector('#stopSession');
 const restartSessionButton = document.querySelector('#restartSession');
@@ -349,6 +353,7 @@ const themeSelect = document.querySelector('#themeSelect');
 const accentPicker = document.querySelector('#accentPicker');
 const syncAgentInstructions = document.querySelector('#syncAgentInstructions');
 const editAgentInstructionsButton = document.querySelector('#editAgentInstructions');
+const checkUpdatesButton = document.querySelector('#checkUpdates');
 const updateAppButton = document.querySelector('#updateApp');
 const updateStatus = document.querySelector('#updateStatus');
 const agentInstructionsDialog = document.querySelector('#agentInstructionsDialog');
@@ -383,6 +388,19 @@ const finishSetupGuideButton = document.querySelector('#finishSetupGuide');
 const copyGuideSshConfigButton = document.querySelector('#copyGuideSshConfig');
 const openGuideConfigButton = document.querySelector('#openGuideConfig');
 const appVersionLabel = document.querySelector('#appVersionLabel');
+const addProjectButton = document.querySelector('#addProject');
+const projectDialog = document.querySelector('#projectDialog');
+const projectForm = document.querySelector('#projectForm');
+const projectLocation = document.querySelector('#projectLocation');
+const projectName = document.querySelector('#projectName');
+const projectRemoteFolder = document.querySelector('#projectRemoteFolder');
+const remoteFolderField = document.querySelector('#remoteFolderField');
+const localFolderField = document.querySelector('#localFolderField');
+const selectLocalFolderButton = document.querySelector('#selectLocalFolder');
+const projectLocalPath = document.querySelector('#projectLocalPath');
+const projectError = document.querySelector('#projectError');
+const cancelProjectButton = document.querySelector('#cancelProject');
+const cancelProjectFooterButton = document.querySelector('#cancelProjectFooter');
 
 const terminal = new Terminal({
   cursorBlink: true,
@@ -417,6 +435,7 @@ let saveSettingsTimer = null;
 let quickItemEditor = null;
 let sshStatusRendered = false;
 let currentUpdateState = { status: 'idle' };
+let selectedLocalProjectPath = '';
 
 let currentSettings = {
   language: 'ru',
@@ -425,6 +444,12 @@ let currentSettings = {
   panels: {
     left: true,
     right: true
+  },
+  sections: {
+    projects: true,
+    sessions: true,
+    appearance: true,
+    status: true
   },
   onboardingSeen: false,
   syncAgentInstructions: true,
@@ -486,7 +511,7 @@ function applyI18n() {
   updatePanelToggle(toggleLeftPanelButton, 'left', currentSettings.panels.left);
   updatePanelToggle(toggleRightPanelButton, 'right', currentSettings.panels.right);
   renderConfigSummary();
-  renderDiagnostics();
+  renderStatusCards();
   renderQuickLists();
   updateStatusText(currentUpdateState);
   updateControls();
@@ -511,8 +536,9 @@ function ensureProjectState(projectId) {
 
   if (!Object.prototype.hasOwnProperty.call(buffersByProject, projectId)) {
     const project = getProject(projectId);
+    const connection = project?.location === 'local' ? t('projectLocal') : `ssh ${appConfig.sshAlias}`;
     buffersByProject[projectId] = project
-      ? `${t('readyPrefix')} ${project.name} ${t('readySuffix')} ssh ${appConfig.sshAlias} / ${appConfig.codexCommand}.\r\n`
+      ? `${t('readyPrefix')} ${project.name} ${t('readySuffix')} ${connection} / ${project.location === 'local' ? 'codex' : appConfig.codexCommand}.\r\n`
       : '';
   }
 }
@@ -570,6 +596,15 @@ function normalizePanelSettings(value = {}) {
   return {
     left: value.left !== false,
     right: value.right !== false
+  };
+}
+
+function normalizeSectionSettings(value = {}) {
+  return {
+    projects: value.projects !== false,
+    sessions: value.sessions !== false,
+    appearance: value.appearance !== false,
+    status: value.status !== false
   };
 }
 
@@ -632,12 +667,19 @@ function applyPanelVisibility() {
   scheduleFit();
 }
 
+function applySectionVisibility() {
+  document.querySelectorAll('[data-section]').forEach((section) => {
+    section.open = currentSettings.sections[section.dataset.section] !== false;
+  });
+}
+
 function applySettings(settings) {
   currentSettings = {
     language: normalizeLanguage(settings.language),
     theme: settings.theme === 'light' ? 'light' : 'dark',
     accentColor: normalizeAccentColor(settings.accentColor),
     panels: normalizePanelSettings(settings.panels),
+    sections: normalizeSectionSettings(settings.sections),
     onboardingSeen: settings.onboardingSeen === true,
     syncAgentInstructions: settings.syncAgentInstructions !== false,
     agentInstructions: normalizeAgentInstructions(settings.agentInstructions),
@@ -645,6 +687,7 @@ function applySettings(settings) {
   };
 
   document.body.dataset.theme = currentSettings.theme;
+  document.title = RELEASE_NAME;
   document.body.dataset.accent = currentSettings.accentColor;
   terminal.options.theme = buildTerminalTheme(currentSettings);
   appVersionLabel.textContent = DISPLAY_VERSION;
@@ -657,6 +700,7 @@ function applySettings(settings) {
     button.setAttribute('aria-pressed', String(active));
   });
   applyPanelVisibility();
+  applySectionVisibility();
   applyI18n();
 }
 
@@ -676,6 +720,9 @@ function updateStatusText(state = {}) {
   const fallback = {
     idle: t('updateIdle'),
     checking: t('updateChecking'),
+    available: currentUpdateState.availableVersion
+      ? `${t('updateAvailable')}: v${currentUpdateState.availableVersion}`
+      : t('updateAvailable'),
     downloading: `${t('updateDownloading')}${percent}`,
     downloaded: t('updateDownloaded'),
     latest: t('updateLatest'),
@@ -685,7 +732,15 @@ function updateStatusText(state = {}) {
 
   updateStatus.textContent = `${explicitMessage || fallback}${suffix}`;
   updateStatus.dataset.state = status;
-  updateAppButton.disabled = ['checking', 'downloading'].includes(status);
+  checkUpdatesButton.disabled = ['checking', 'downloading'].includes(status);
+  updateAppButton.hidden = status !== 'available';
+  updateAppButton.disabled = status !== 'available';
+  if (status === 'available') {
+    const version = currentUpdateState.availableVersion ? ` v${currentUpdateState.availableVersion}` : '';
+    updateAppButton.textContent = currentUpdateState.updateMode === 'manual-download'
+      ? (currentSettings.language === 'en' ? `Download${version} (.dmg)` : `Скачать${version} (.dmg)`)
+      : (currentSettings.language === 'en' ? `Update to${version}` : `Обновить до${version}`);
+  }
 }
 
 function saveSettingsSoon() {
@@ -798,7 +853,7 @@ function renderProjectList() {
     const name = document.createElement('strong');
     const remotePath = document.createElement('span');
     name.textContent = project.name;
-    remotePath.textContent = project.path;
+    remotePath.textContent = `${project.location === 'local' ? t('projectLocal') : 'VDS'} · ${project.path}`;
     text.append(name, remotePath);
 
     const startButton = document.createElement('button');
@@ -832,6 +887,86 @@ function renderProjectList() {
   });
 }
 
+function updateProjectLocationFields() {
+  const local = projectLocation.value === 'local';
+  remoteFolderField.hidden = local;
+  localFolderField.hidden = !local;
+  projectRemoteFolder.required = !local;
+  if (local) projectError.textContent = '';
+}
+
+async function openProjectDialog() {
+  projectForm.reset();
+  projectError.textContent = '';
+  projectLocation.value = 'remote';
+  selectedLocalProjectPath = '';
+  projectLocalPath.textContent = '';
+  projectRemoteFolder.replaceChildren(new Option(currentSettings.language === 'en' ? 'Loading folders…' : 'Загрузка папок…', ''));
+  projectRemoteFolder.disabled = true;
+  updateProjectLocationFields();
+  if (!projectDialog.open) projectDialog.showModal();
+
+  try {
+    const result = await api.listRemoteProjectFolders();
+    if (!result.ok) throw new Error(result.error || 'Could not list VDS folders.');
+    projectRemoteFolder.replaceChildren(...result.folders.map((folder) => new Option(folder, folder)));
+    projectRemoteFolder.disabled = result.folders.length === 0;
+    if (result.folders.length === 0 && projectLocation.value === 'remote') {
+      projectError.textContent = currentSettings.language === 'en'
+        ? `No folders were found inside ${result.root || '/opt'}.`
+        : `В ${result.root || '/opt'} не найдено доступных папок.`;
+    }
+    projectName.focus();
+  } catch (error) {
+    projectRemoteFolder.replaceChildren(new Option(currentSettings.language === 'en' ? 'Folders unavailable' : 'Папки недоступны', ''));
+    if (projectLocation.value === 'remote') projectError.textContent = error.message || String(error);
+  }
+}
+
+function closeProjectDialog() {
+  projectForm.reset();
+  selectedLocalProjectPath = '';
+  projectDialog.close();
+}
+
+async function selectLocalProjectFolder() {
+  const result = await api.selectLocalProjectFolder();
+  if (result.ok) {
+    selectedLocalProjectPath = result.path;
+    projectLocalPath.textContent = result.path;
+    projectError.textContent = '';
+  }
+}
+
+async function saveProject(event) {
+  event.preventDefault();
+  const local = projectLocation.value === 'local';
+  const folder = local ? selectedLocalProjectPath : projectRemoteFolder.value;
+  projectError.textContent = '';
+
+  if (!folder) {
+    projectError.textContent = currentSettings.language === 'en' ? 'Select a project folder.' : 'Выберите папку проекта.';
+    return;
+  }
+
+  try {
+    const result = await api.addProject({
+      name: projectName.value,
+      path: folder,
+      location: local ? 'local' : 'remote'
+    });
+    if (!result.ok) throw new Error(result.error || 'Could not add the project.');
+    applyConfig(result.config);
+    if (result.history) applyHistory(result.history, { emptyAllowed: true });
+    activeProjectId = result.project.id;
+    closeProjectDialog();
+    renderActiveBuffer();
+    updateControls();
+  } catch (error) {
+    projectError.textContent = error.message || String(error);
+  }
+}
+
 function renderConfigSummary() {
   configPath.textContent = appConfig.path || '';
   footerAlias.textContent = appConfig.sshAlias || 'my-vds';
@@ -847,38 +982,28 @@ function renderConfigSummary() {
   configErrors.classList.toggle('error-text', errors.length > 0);
 }
 
-function renderDiagnostics() {
+function renderStatusCards() {
   statusCards.innerHTML = '';
-  diagnosticActions.innerHTML = '';
 
-  DIAGNOSTICS.forEach((check) => {
-    if (check.target === 'card') {
-      const label = t(check.labelKey);
-      const card = document.createElement('article');
-      card.className = 'status-card';
-      card.dataset.checkCard = check.id;
-      card.innerHTML = [
-        '<div class="status-card-top">',
-        '<div>',
-        `<strong>${label}</strong>`,
-        `<span class="status-label unknown">${statusText('unknown')}</span>`,
-        '</div>',
-        `<button type="button" class="mini-button" data-check="${check.id}" title="${t('reloadConfig')} ${label}" aria-label="${t('reloadConfig')} ${label}">↻</button>`,
-        '</div>',
-        `<pre class="status-output">${t('noData')}</pre>`
-      ].join('');
-      statusCards.appendChild(card);
-    } else {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'diagnostic-button';
-      button.dataset.check = check.id;
-      button.textContent = t(check.labelKey);
-      diagnosticActions.appendChild(button);
-    }
+  STATUS_CHECKS.forEach((check) => {
+    const label = t(check.labelKey);
+    const card = document.createElement('article');
+    card.className = 'status-card';
+    card.dataset.checkCard = check.id;
+    card.innerHTML = [
+      '<div class="status-card-top">',
+      '<div>',
+      `<strong>${label}</strong>`,
+      `<span class="status-label unknown">${statusText('unknown')}</span>`,
+      '</div>',
+      `<button type="button" class="mini-button" data-check="${check.id}" title="${t('reloadConfig')} ${label}" aria-label="${t('reloadConfig')} ${label}">↻</button>`,
+      '</div>',
+      `<pre class="status-output">${t('noData')}</pre>`
+    ].join('');
+    statusCards.appendChild(card);
   });
 
-  document.querySelectorAll('[data-check]').forEach((button) => {
+  statusCards.querySelectorAll('[data-check]').forEach((button) => {
     button.addEventListener('click', () => runCheck(button.dataset.check));
   });
 }
@@ -893,6 +1018,12 @@ function updateControls() {
 
   activeTitle.textContent = activeProject.name;
   activePath.textContent = activeProject.path;
+  activeSshAlias.textContent = activeProject.location === 'local'
+    ? t('projectLocal')
+    : `ssh ${appConfig.sshAlias || 'my-vds'}`;
+  activeCommand.textContent = activeProject.location === 'local' ? 'codex' : appConfig.codexCommand;
+  footerAlias.textContent = activeProject.location === 'local' ? 'local' : appConfig.sshAlias;
+  footerCommand.textContent = activeProject.location === 'local' ? 'codex' : appConfig.codexCommand;
   footerProject.textContent = activeProject.name;
   footerStatus.textContent = statusText(sessionStatus(activeProject.id));
   startSessionButton.disabled = hasSession;
@@ -961,35 +1092,23 @@ function setCheckState(checkId, state, output) {
 }
 
 async function runCheck(checkId) {
-  const check = DIAGNOSTICS.find((item) => item.id === checkId);
+  const check = STATUS_CHECKS.find((item) => item.id === checkId);
 
   if (!check) {
     return;
   }
 
-  if (check.target === 'terminal') {
-    writeLocal(activeProjectId, `\r\n[diagnostic] ${t(check.labelKey)}\r\n${t('readOnlyRunning')}\r\n`);
-  } else {
-    setCheckState(checkId, 'loading', t('running'));
-  }
+  setCheckState(checkId, 'loading', t('running'));
 
   try {
     const result = await api.runDiagnostic(checkId, activeProjectId);
     const output = formatResult(result);
 
-    if (check.target === 'terminal') {
-      writeLocal(activeProjectId, `${output}\r\n`);
-    } else {
-      setCheckState(checkId, result.ok ? 'ok' : 'error', output);
-    }
+    setCheckState(checkId, result.ok ? 'ok' : 'error', output);
   } catch (error) {
     const message = error.message || String(error);
 
-    if (check.target === 'terminal') {
-      writeLocal(activeProjectId, `error:\r\n${message}\r\n`);
-    } else {
-      setCheckState(checkId, 'error', message);
-    }
+    setCheckState(checkId, 'error', message);
   }
 }
 
@@ -1026,7 +1145,10 @@ async function startSession(projectId = activeProjectId) {
   }
 
   switchProject(projectId);
-  writeLocal(projectId, `\r\n[session] ${t('startSessionLog')} ${project.name} through ssh ${appConfig.sshAlias} / ${appConfig.codexCommand}...\r\n`);
+  const connection = project.location === 'local'
+    ? `${t('projectLocal')} / codex`
+    : `ssh ${appConfig.sshAlias} / ${appConfig.codexCommand}`;
+  writeLocal(projectId, `\r\n[session] ${t('startSessionLog')} ${project.name} through ${connection}...\r\n`);
   updateControls();
 
   const result = await api.terminalStart(projectId);
@@ -1039,6 +1161,7 @@ async function startSession(projectId = activeProjectId) {
 
   sessionsByProject[projectId] = result.sessionId;
   targetBySession.set(result.sessionId, projectId);
+  if (result.warning) writeLocal(projectId, `[session] ${result.warning}\r\n`);
   updateControls();
   fitAndResize();
 }
@@ -1457,6 +1580,16 @@ async function checkForAppUpdates() {
   }
 }
 
+async function installAvailableUpdate() {
+  try {
+    const result = await api.installUpdate();
+    if (result?.state) updateStatusText(result.state);
+    if (!result?.ok && result?.error) updateStatusText({ status: 'error', message: result.error });
+  } catch (error) {
+    updateStatusText({ status: 'error', message: error.message || String(error) });
+  }
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -1476,13 +1609,13 @@ function setupGuideMarkup({ welcome = false } = {}) {
         <div>
           <h3>${welcome ? 'Welcome to the developer beta' : 'Connect your VDS'}</h3>
           <p class="guide-version-line"><strong>Version:</strong> ${escapeHtml(DISPLAY_VERSION)}</p>
-          <p>Install Codex CLI on the VDS, set up a normal OpenSSH alias once, then launch Codex on the server from this app.</p>
+          <p>Run the installed Codex CLI in a local project folder or connect to a VDS through your OpenSSH alias.</p>
         </div>
       </section>
       <section class="guide-grid">
         <article><strong>Left panel</strong><span>Projects, sessions, config, customization, AGENTS.md.</span></article>
         <article><strong>Center</strong><span>Embedded terminal and session controls.</span></article>
-        <article><strong>Right panel</strong><span>Server checks, diagnostics, quick prompts, quick commands.</span></article>
+        <article><strong>Right panel</strong><span>Server status, Markdown instructions, quick prompts, and quick commands.</span></article>
       </section>
       <p class="guide-note"><strong>What is codex-vpn?</strong> It is not part of Codex CLI and is not installed by this app. Treat it as an advanced custom wrapper. For a fresh server, install and use the regular <code>codex</code> command.</p>
       <ol class="guide-steps">
@@ -1513,13 +1646,13 @@ codex</pre></li>
       <div>
         <h3>${welcome ? 'Добро пожаловать в developer beta' : 'Подключение к своему VDS'}</h3>
         <p class="guide-version-line"><strong>Версия:</strong> ${escapeHtml(DISPLAY_VERSION)}</p>
-        <p>Установите Codex CLI на VDS, один раз настройте обычный OpenSSH alias, а затем запускайте Codex на сервере из приложения.</p>
+        <p>Запускайте установленный Codex CLI в локальной папке проекта или подключайтесь к VDS через свой OpenSSH alias.</p>
       </div>
     </section>
       <section class="guide-grid">
         <article><strong>Левая панель</strong><span>Проекты, сессии, конфиг, кастомизация, AGENTS.md.</span></article>
         <article><strong>Центр</strong><span>Встроенный терминал и кнопки управления сессией.</span></article>
-        <article><strong>Правая панель</strong><span>Проверки сервера, диагностика, быстрые промпты и команды.</span></article>
+        <article><strong>Правая панель</strong><span>Статус сервера, Markdown-инструкции, быстрые промпты и команды.</span></article>
       </section>
       <p class="guide-note"><strong>Что такое codex-vpn?</strong> Это не часть Codex CLI и приложение его не устанавливает. Считайте это продвинутой пользовательской обёрткой. Для нового сервера установите и используйте обычную команду <code>codex</code>.</p>
       <ol class="guide-steps">
@@ -1570,7 +1703,7 @@ function applyConfig(config) {
   syncProjectState();
   renderProjectList();
   renderConfigSummary();
-  renderDiagnostics();
+  renderStatusCards();
   renderQuickLists();
 }
 
@@ -1670,6 +1803,19 @@ copySshConfigButton.addEventListener('click', copySshConfigExample);
 openSetupGuideButton.addEventListener('click', () => openSetupGuide());
 addQuickPromptButton.addEventListener('click', () => openQuickItemEditor('prompt'));
 addQuickCommandSetButton.addEventListener('click', () => openQuickItemEditor('command'));
+addProjectButton.addEventListener('click', (event) => {
+  event.stopPropagation();
+  openProjectDialog();
+});
+projectLocation.addEventListener('change', updateProjectLocationFields);
+selectLocalFolderButton.addEventListener('click', selectLocalProjectFolder);
+projectForm.addEventListener('submit', saveProject);
+cancelProjectButton.addEventListener('click', closeProjectDialog);
+cancelProjectFooterButton.addEventListener('click', closeProjectDialog);
+projectDialog.addEventListener('cancel', () => {
+  selectedLocalProjectPath = '';
+  projectForm.reset();
+});
 languageSelect.addEventListener('change', () => {
   currentSettings = {
     ...currentSettings,
@@ -1701,7 +1847,8 @@ toggleRightPanelButton.addEventListener('click', () => {
   saveSettingsSoon();
 });
 editAgentInstructionsButton.addEventListener('click', openAgentInstructionsEditor);
-updateAppButton.addEventListener('click', checkForAppUpdates);
+checkUpdatesButton.addEventListener('click', checkForAppUpdates);
+updateAppButton.addEventListener('click', installAvailableUpdate);
 agentInstructionsForm.addEventListener('submit', saveAgentInstructions);
 cancelAgentInstructionsButton.addEventListener('click', closeAgentInstructionsEditor);
 cancelAgentInstructionsFooterButton.addEventListener('click', closeAgentInstructionsEditor);
@@ -1771,6 +1918,17 @@ accentPicker.addEventListener('click', (event) => {
   applySettings(currentSettings);
   saveSettingsSoon();
 });
+document.querySelectorAll('[data-section]').forEach((section) => {
+  section.addEventListener('toggle', () => {
+    const key = section.dataset.section;
+    if (currentSettings.sections[key] === section.open) return;
+    currentSettings = {
+      ...currentSettings,
+      sections: { ...currentSettings.sections, [key]: section.open }
+    };
+    saveSettingsSoon();
+  });
+});
 window.addEventListener('resize', scheduleFit);
 window.addEventListener('beforeunload', () => {
   api.saveHistory(historyPayload()).catch(() => {});
@@ -1798,7 +1956,13 @@ api.onUiCommand(({ command }) => {
     'open-config': openConfigFile,
     'reload-config': reloadConfig,
     'copy-ssh-config': copySshConfigExample,
-    'run-ssh-check': () => runCheck('ssh'),
+    'add-project': openProjectDialog,
+    'run-markdown': selectAndRunMarkdownInstruction,
+    'edit-agents': openAgentInstructionsEditor,
+    'toggle-theme': () => {
+      themeSelect.value = currentSettings.theme === 'light' ? 'dark' : 'light';
+      themeSelect.dispatchEvent(new Event('change'));
+    },
     'start-session': () => startSession(),
     'stop-session': () => stopSession(),
     'restart-session': () => restartSession(),

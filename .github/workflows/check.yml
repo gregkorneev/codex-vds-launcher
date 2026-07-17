@@ -28,7 +28,9 @@ jobs:
         run: npm ci
 
       - name: Check sources
-        run: npm run check
+        run: |
+          npm run check
+          npm test
 
       - name: Build macOS app without publishing
         run: npm run dist:mac
