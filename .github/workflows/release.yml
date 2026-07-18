@@ -46,7 +46,7 @@ jobs:
           test -n "$(find dist -maxdepth 1 -name '*.dmg' -print -quit)"
           test -n "$(find dist -maxdepth 1 -name '*.zip' -print -quit)"
           test -f dist/beta-mac.yml
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.7$' dist/beta-mac.yml
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.8$' dist/beta-mac.yml
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -87,7 +87,7 @@ jobs:
         run: |
           test -n "$(find dist -maxdepth 1 -name '*win-x64.exe' -print -quit)"
           test -f dist/beta.yml
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.7$' dist/beta.yml
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.8$' dist/beta.yml
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -97,82 +97,3 @@ jobs:
             dist/*win-x64.exe
             dist/beta.yml
           if-no-files-found: error
-
-  publish-release:
-    name: Publish and verify GitHub pre-release
-    runs-on: ubuntu-latest
-    needs:
-      - build-macos
-      - build-windows
-    steps:
-      - name: Download release artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-assets
-
-      - name: Publish GitHub pre-release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_TITLE: Codex CLI Launcher Developer Beta 7
-        run: |
-          cat > release-notes.md <<'EOF'
-          ## Русский
-
-          **Codex CLI Launcher Developer Beta 7** улучшает управление проектами, быстрыми действиями, режимами работы и профилем Codex.
-
-          Главное:
-          - Созданные пользователем проекты теперь можно удалить и в локальном режиме, и в режиме VDS. Удаляется только запись из Launcher — папка и файлы проекта остаются на месте.
-          - Быстрые промпты и команды больше не разделены визуально: они показаны одним списком «Быстрые действия» и одинаково вставляют текст в активную сессию.
-          - Выбор режима работы продублирован в меню «Подключение» на macOS и в контекстном меню трея Windows.
-          - Внизу левой панели появился раскрываемый профиль Codex. Он показывает авторизованный аккаунт, тариф, оставшийся процент лимитов и время их обновления.
-          - Профиль автоматически использует локальный Codex CLI или Codex CLI на выбранной VDS и не читает и не показывает токены.
-          - Обновлены иконки приложения для macOS, Windows, Windows-трея и интерфейса Launcher.
-
-          ## English
-
-          **Codex CLI Launcher Developer Beta 7** improves project management, quick actions, working-mode access, and the Codex account profile.
-
-          Highlights:
-          - User-created projects can now be removed in both local and VDS modes. Only the Launcher entry is removed; the project folder and files remain untouched.
-          - Quick prompts and commands are no longer split visually: they appear in one Quick actions list and consistently insert text into the active session.
-          - Working-mode selection is duplicated in the macOS Connection menu and the Windows tray context menu.
-          - An expandable Codex profile at the bottom of the left panel shows the signed-in account, plan, remaining limit percentage, and reset times.
-          - The profile automatically queries either the local Codex CLI or the selected VDS Codex CLI without reading or exposing tokens.
-          - Application icons have been updated for macOS, Windows, the Windows tray, and the Launcher interface.
-
-          This is a prerelease. The macOS app is ad-hoc signed and is not notarized.
-          EOF
-
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release edit "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes-file release-notes.md --prerelease
-            gh release view "$RELEASE_TAG" --json assets -q '.assets[].name' | while IFS= read -r asset; do
-              test -z "$asset" || gh release delete-asset "$RELEASE_TAG" "$asset" -y
-            done
-          else
-            gh release create "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes-file release-notes.md --prerelease
-          fi
-          mapfile -d '' assets < <(find release-assets -type f \( -name '*.dmg' -o -name '*.zip' -o -name '*win-x64.exe' -o -name 'beta-mac.yml' -o -name 'beta.yml' \) -print0)
-          test "${#assets[@]}" -eq 5
-          gh release upload "$RELEASE_TAG" "${assets[@]}"
-
-      - name: Verify published beta channel
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          test "$(gh release view "$RELEASE_TAG" --json isPrerelease -q .isPrerelease)" = true
-          assets="$(gh release view "$RELEASE_TAG" --json assets -q '.assets[].name')"
-          grep -Fx 'beta-mac.yml' <<< "$assets"
-          grep -Fx 'beta.yml' <<< "$assets"
-          test "$(grep -Ec '\.blockmap$' <<< "$assets")" -eq 0
-
-          metadata_dir="$(mktemp -d)"
-          gh release download "$RELEASE_TAG" -p beta-mac.yml -p beta.yml -D "$metadata_dir"
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.7$' "$metadata_dir/beta-mac.yml"
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.7$' "$metadata_dir/beta.yml"
-
-          latest_stable="$(gh api "repos/$GH_REPO/releases/latest" --jq .tag_name 2>/dev/null || true)"
-          test "$latest_stable" != "$RELEASE_TAG"

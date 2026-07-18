@@ -1,20 +1,18 @@
-const DISPLAY_VERSION = 'Developer Beta 7 (1.0.0-beta.7)';
-const RELEASE_NAME = 'Codex CLI Launcher Developer Beta 7';
+const DISPLAY_VERSION = 'Developer Beta 8 (1.0.0-beta.8)';
+const RELEASE_NAME = 'Codex CLI Launcher Developer Beta 8';
 
 const RELEASE_CHANGES = {
   ru: [
-    'Созданные пользователем локальные и VDS-проекты теперь можно удалить из Launcher без удаления файлов.',
-    'Промпты и команды отображаются единым списком «Быстрые действия».',
-    'Режим работы продублирован в меню «Подключение» на macOS и в трее Windows.',
-    'Внизу левой панели появился профиль Codex с аккаунтом, остатком лимитов и временем их обновления.',
-    'Иконки приложения для macOS, Windows и интерфейса обновлены.'
+    'Терминал теперь корректно подстраивается под размер окна и панелей без наложения на правую колонку.',
+    'Профиль Codex отдельно показывает имя пользователя, email, тип подписки, оставшиеся лимиты и время их обновления.',
+    'Профиль поддерживает данные локального Codex CLI и Codex CLI на выбранной VDS без чтения токенов.',
+    'Обновлены иконки приложения для macOS, Windows и интерфейса Launcher; иконки menu bar и tray сохранены.'
   ],
   en: [
-    'User-created local and VDS projects can now be removed from Launcher without deleting their files.',
-    'Prompts and commands are presented as one Quick actions list.',
-    'The working mode is also available in the macOS Connection menu and the Windows tray.',
-    'A Codex profile at the bottom of the left panel shows the account, remaining limits, and reset times.',
-    'The macOS, Windows, and in-app icons have been updated.'
+    'The terminal now tracks window and panel size changes without overlapping the right column.',
+    'The Codex profile separately shows the username, email, subscription type, remaining limits, and reset times.',
+    'The profile supports both the local Codex CLI and the selected VDS Codex CLI without reading tokens.',
+    'Application icons have been refreshed for macOS, Windows, and the Launcher UI while menu bar and tray icons remain unchanged.'
   ]
 };
 
@@ -217,6 +215,8 @@ const TRANSLATIONS = {
     accountUnavailable: 'Профиль Codex недоступен',
     accountNotSignedIn: 'Codex не авторизован',
     apiKeyAccount: 'Аккаунт API key',
+    subscriptionType: 'Тип подписки',
+    resetCredits: 'Доступно дополнительных сбросов',
     refreshAccount: 'Обновить лимиты',
     limitsRemaining: 'Осталось',
     resetsAt: 'Обновится',
@@ -371,6 +371,8 @@ const TRANSLATIONS = {
     accountUnavailable: 'Codex profile unavailable',
     accountNotSignedIn: 'Codex is not signed in',
     apiKeyAccount: 'API key account',
+    subscriptionType: 'Subscription type',
+    resetCredits: 'Extra resets available',
     refreshAccount: 'Refresh limits',
     limitsRemaining: 'Remaining',
     resetsAt: 'Resets',
@@ -459,7 +461,9 @@ const cancelProjectButton = document.querySelector('#cancelProject');
 const cancelProjectFooterButton = document.querySelector('#cancelProjectFooter');
 const accountProfile = document.querySelector('#accountProfile');
 const accountName = document.querySelector('#accountName');
+const accountEmail = document.querySelector('#accountEmail');
 const accountPlan = document.querySelector('#accountPlan');
+const accountMode = document.querySelector('#accountMode');
 const accountLimits = document.querySelector('#accountLimits');
 const refreshAccountButton = document.querySelector('#refreshAccount');
 
@@ -847,12 +851,16 @@ function renderCodexAccount(profile) {
   accountLimits.innerHTML = '';
   if (!profile) {
     accountName.textContent = t('accountLoading');
-    accountPlan.textContent = accountModeLabel(currentSettings.launcherMode);
+    accountEmail.textContent = '';
+    accountPlan.textContent = '—';
+    accountMode.textContent = accountModeLabel(currentSettings.launcherMode);
     return;
   }
   if (!profile.ok) {
     accountName.textContent = t('accountUnavailable');
-    accountPlan.textContent = accountModeLabel(profile.mode);
+    accountEmail.textContent = '';
+    accountPlan.textContent = '—';
+    accountMode.textContent = accountModeLabel(profile.mode);
     const error = document.createElement('p');
     error.className = 'account-error';
     error.textContent = profile.error || t('noLimitData');
@@ -861,13 +869,17 @@ function renderCodexAccount(profile) {
   }
   if (!profile.signedIn) {
     accountName.textContent = t('accountNotSignedIn');
-    accountPlan.textContent = accountModeLabel(profile.mode);
+    accountEmail.textContent = '';
+    accountPlan.textContent = '—';
+    accountMode.textContent = accountModeLabel(profile.mode);
     return;
   }
 
-  accountName.textContent = profile.email || t('apiKeyAccount');
+  accountName.textContent = profile.username || t('apiKeyAccount');
+  accountEmail.textContent = profile.email || t('apiKeyAccount');
   const plan = profile.planType ? profile.planType.charAt(0).toUpperCase() + profile.planType.slice(1) : '';
-  accountPlan.textContent = [plan, accountModeLabel(profile.mode)].filter(Boolean).join(' · ');
+  accountPlan.textContent = plan || '—';
+  accountMode.textContent = accountModeLabel(profile.mode);
 
   profile.limits.forEach((limit) => {
     const row = document.createElement('div');
@@ -883,6 +895,13 @@ function renderCodexAccount(profile) {
     row.append(title, remaining, reset);
     accountLimits.appendChild(row);
   });
+
+  if (profile.resetCredits !== null) {
+    const resetCredits = document.createElement('p');
+    resetCredits.className = 'account-error';
+    resetCredits.textContent = `${t('resetCredits')}: ${profile.resetCredits}`;
+    accountLimits.appendChild(resetCredits);
+  }
 
   if (profile.limits.length === 0) {
     const empty = document.createElement('p');
@@ -1846,7 +1865,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
           <article><strong>On a VDS over SSH</strong><span>Uses your OpenSSH alias and the Codex CLI installed on the server. VDS configuration and status are shown only in this mode.</span></article>
         </section>
         <section class="release-highlights">
-          <h3>What changed in Developer Beta 7</h3>
+          <h3>What changed in Developer Beta 8</h3>
           <ul>${changes}</ul>
         </section>
         <ol class="guide-steps">
@@ -1871,7 +1890,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
         <article><strong>На VDS через SSH</strong><span>Использует ваш OpenSSH alias и Codex CLI на сервере. Конфигурация и статус VDS видны только в этом режиме.</span></article>
       </section>
       <section class="release-highlights">
-        <h3>Что изменилось в Developer Beta 7</h3>
+        <h3>Что изменилось в Developer Beta 8</h3>
         <ul>${changes}</ul>
       </section>
       <ol class="guide-steps">
@@ -2183,7 +2202,9 @@ quickItemDialog.addEventListener('cancel', () => {
 });
 refreshAccountButton.addEventListener('click', refreshCodexAccount);
 accountProfile.addEventListener('toggle', () => {
-  if (accountProfile.open && Date.now() - codexAccountLoadedAt > 300000) refreshCodexAccount();
+  if (!accountProfile.open) return;
+  window.requestAnimationFrame(() => accountProfile.scrollIntoView({ block: 'end' }));
+  if (Date.now() - codexAccountLoadedAt > 300000) refreshCodexAccount();
 });
 themeSelect.addEventListener('change', () => {
   currentSettings = {
@@ -2218,8 +2239,11 @@ document.querySelectorAll('[data-section]').forEach((section) => {
     saveSettingsSoon();
   });
 });
+const terminalResizeObserver = new ResizeObserver(scheduleFit);
+terminalResizeObserver.observe(terminalElement);
 window.addEventListener('resize', scheduleFit);
 window.addEventListener('beforeunload', () => {
+  terminalResizeObserver.disconnect();
   api.saveHistory(historyPayload()).catch(() => {});
   api.saveSettings(currentSettings).catch(() => {});
 });

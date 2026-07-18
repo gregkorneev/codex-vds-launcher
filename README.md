@@ -10,7 +10,7 @@ Codex CLI Launcher is an Electron app with an embedded xterm.js terminal. It can
 
 ### Status
 
-Developer beta. Current build: **Codex CLI Launcher Developer Beta 7**.
+Developer beta. Current build: **Codex CLI Launcher Developer Beta 8**.
 
 ### Features
 
@@ -180,7 +180,7 @@ Beta builds use the `beta` update channel and stable builds use `latest`. Ad-hoc
 
 ### Release checklist
 
-Every release must update `RELEASE_CHANGES` in `src/renderer/app.js`. The launcher records the installed version and automatically shows this bilingual change summary on the first launch after an update.
+Every release must update `RELEASE_CHANGES` in `src/renderer/app.js`. Tag workflows build and verify artifacts; the maintainer publishes the GitHub release from their own account so the release author is not `github-actions`.
 
 ## Русский
 
@@ -188,7 +188,7 @@ Codex CLI Launcher — Electron-приложение со встроенным �
 
 ### Статус
 
-Developer beta. Текущая сборка: **Codex CLI Launcher Developer Beta 7**.
+Developer beta. Текущая сборка: **Codex CLI Launcher Developer Beta 8**.
 
 ### Возможности
 
@@ -357,4 +357,4 @@ Beta-сборки используют канал `beta`, стабильные �
 
 ### Чек-лист релиза
 
-В каждом релизе нужно обновлять `RELEASE_CHANGES` в `src/renderer/app.js`. Лаунчер запоминает установленную версию и автоматически показывает этот двуязычный список изменений при первом запуске после обновления.
+В каждом релизе нужно обновлять `RELEASE_CHANGES` в `src/renderer/app.js`. Workflow по тегу собирает и проверяет артефакты; GitHub-релиз публикует владелец репозитория из своего аккаунта, поэтому автором не становится `github-actions`.

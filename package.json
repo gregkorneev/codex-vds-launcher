@@ -1,10 +1,10 @@
 {
   "name": "codex-cli-launcher",
-  "version": "1.0.0-beta.7",
+  "version": "1.0.0-beta.8",
   "description": "Desktop launcher for running Codex CLI locally or on a VDS over SSH",
   "desktopName": "Codex CLI Launcher Beta",
-  "displayVersion": "Developer Beta 7 (1.0.0-beta.7)",
-  "releaseName": "Codex CLI Launcher Developer Beta 7",
+  "displayVersion": "Developer Beta 8 (1.0.0-beta.8)",
+  "releaseName": "Codex CLI Launcher Developer Beta 8",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",

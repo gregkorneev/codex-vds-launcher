@@ -14,14 +14,20 @@ function normalizeCodexAccount(accountResponse = {}, rateLimitResponse = {}, mod
   const snapshots = rateLimitResponse.rateLimitsByLimitId;
   const rateLimits = snapshots?.codex || rateLimitResponse.rateLimits || null;
   const name = rateLimits?.limitName || rateLimits?.limitId || 'Codex';
+  const email = typeof account?.email === 'string' ? account.email : null;
+  const username = account?.name || account?.displayName || account?.username || email?.split('@')[0] || null;
 
   return {
     ok: true,
     mode: mode === 'vds' ? 'vds' : 'local',
     signedIn: Boolean(account),
     type: account?.type || null,
-    email: typeof account?.email === 'string' ? account.email : null,
+    username,
+    email,
     planType: account?.planType || rateLimits?.planType || null,
+    resetCredits: Number.isInteger(rateLimitResponse.rateLimitResetCredits?.availableCount)
+      ? rateLimitResponse.rateLimitResetCredits.availableCount
+      : null,
     limits: [
       normalizeWindow(rateLimits?.primary, name),
       normalizeWindow(rateLimits?.secondary, name)

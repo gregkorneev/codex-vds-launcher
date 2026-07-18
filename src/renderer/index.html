@@ -95,10 +95,15 @@
             <span class="account-avatar" aria-hidden="true">C</span>
             <span class="account-identity">
               <strong id="accountName" data-i18n="accountLoading">Проверяем аккаунт Codex…</strong>
-              <small id="accountPlan"></small>
+              <small id="accountEmail"></small>
             </span>
           </summary>
           <div class="account-details">
+            <div class="account-subscription">
+              <small data-i18n="subscriptionType">Тип подписки</small>
+              <strong id="accountPlan">—</strong>
+              <small id="accountMode"></small>
+            </div>
             <div class="account-limits" id="accountLimits"></div>
             <button type="button" class="secondary-button full-width-button" id="refreshAccount" data-i18n="refreshAccount">Обновить лимиты</button>
           </div>
@@ -144,7 +149,7 @@
             <button type="button" class="secondary-button full-width-button" id="checkUpdates" data-i18n="checkUpdates">Проверить обновления</button>
             <button type="button" class="primary-button full-width-button" id="updateApp" data-i18n="updateApp" hidden>Обновить приложение</button>
             <p class="update-status" id="updateStatus" data-i18n="updateIdle">Обновления не проверялись</p>
-            <p class="version-note"><span data-i18n="versionLabel">Версия</span> <strong id="appVersionLabel">Developer Beta 7 (1.0.0-beta.7)</strong></p>
+            <p class="version-note"><span data-i18n="versionLabel">Версия</span> <strong id="appVersionLabel">Developer Beta 8 (1.0.0-beta.8)</strong></p>
           </div>
         </details>
 
@@ -244,7 +249,7 @@
       <form class="dialog-card guide-card" method="dialog">
         <header class="dialog-heading">
           <div>
-            <p class="dialog-kicker" id="setupGuideKicker">Codex CLI Launcher Developer Beta 7</p>
+            <p class="dialog-kicker" id="setupGuideKicker">Codex CLI Launcher Developer Beta 8</p>
             <h2 id="setupGuideTitle">Настройка подключения к VDS</h2>
           </div>
           <button type="button" class="mini-button" id="closeSetupGuide" title="Закрыть" aria-label="Закрыть" data-i18n-attr="title:close;aria-label:close">×</button>

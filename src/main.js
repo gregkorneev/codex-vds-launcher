@@ -26,7 +26,7 @@ const APP_VERSION = packageJson.version;
 const IS_BETA_BUILD = /(?:^|-)beta(?:\.|$)/i.test(APP_VERSION);
 const APP_DISPLAY_NAME = IS_BETA_BUILD ? (packageJson.desktopName || BETA_APP_NAME) : APP_NAME;
 const UPDATE_CHANNEL = getUpdateChannel(APP_VERSION);
-const RELEASE_NAME = packageJson.releaseName || 'Codex CLI Launcher Developer Beta 7';
+const RELEASE_NAME = packageJson.releaseName || 'Codex CLI Launcher Developer Beta 8';
 const DISPLAY_VERSION = packageJson.displayVersion || packageJson.version;
 const SSH_CONNECT_TIMEOUT_SECONDS = 15;
 const DIAGNOSTIC_TIMEOUT_MS = 30000;
@@ -49,7 +49,7 @@ const RENDERER_ASSETS_DIR = path.join(__dirname, 'renderer', 'assets');
 const APP_ICON_PATH = path.join(RENDERER_ASSETS_DIR, 'app-icon.png');
 const TRAY_ICON_PATH = process.platform === 'darwin'
   ? path.join(RENDERER_ASSETS_DIR, 'tray-iconTemplate@2x.png')
-  : APP_ICON_PATH;
+  : path.join(RENDERER_ASSETS_DIR, 'tray-icon.png');
 
 const DEFAULT_QUICK_PROMPTS = [
   {
