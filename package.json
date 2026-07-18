@@ -1,10 +1,10 @@
 {
   "name": "codex-cli-launcher",
-  "version": "1.0.0-beta.6",
+  "version": "1.0.0-beta.7",
   "description": "Desktop launcher for running Codex CLI locally or on a VDS over SSH",
   "desktopName": "Codex CLI Launcher Beta",
-  "displayVersion": "Developer Beta 6 (1.0.0-beta.6)",
-  "releaseName": "Codex CLI Launcher Developer Beta 6",
+  "displayVersion": "Developer Beta 7 (1.0.0-beta.7)",
+  "releaseName": "Codex CLI Launcher Developer Beta 7",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -15,7 +15,7 @@
     "dist:win": "electron-builder --win nsis --x64 --publish never -c.npmRebuild=false",
     "publish:beta": "electron-builder --publish always -c.publish.channel=beta -c.publish.releaseType=prerelease",
     "publish:release": "electron-builder --publish always -c.publish.channel=latest -c.publish.releaseType=release -c.productName=\"Codex CLI Launcher\" -c.artifactName=\"Codex-CLI-Launcher-${version}-${os}-${arch}.${ext}\"",
-    "check": "node --check src/main.js && node --check src/preload.js && node --check src/renderer/app.js && node --check src/shared/user-projects.js && node --check src/shared/update-policy.js && node --check src/web/project-store.js",
+    "check": "node --check src/main.js && node --check src/preload.js && node --check src/renderer/app.js && node --check src/shared/codex-account.js && node --check src/shared/user-projects.js && node --check src/shared/update-policy.js && node --check src/web/project-store.js",
     "test": "node --test",
     "license:summary": "license-checker --summary",
     "license:prod": "license-checker --production"

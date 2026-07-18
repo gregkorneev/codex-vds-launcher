@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('codexVdsLauncher', {
   listRemoteProjectFolders: () => ipcRenderer.invoke('projects:listRemoteFolders'),
   selectLocalProjectFolder: () => ipcRenderer.invoke('projects:selectLocalFolder'),
   addProject: (project) => ipcRenderer.invoke('projects:add', project),
+  deleteProject: (projectId) => ipcRenderer.invoke('projects:delete', projectId),
+  loadCodexAccount: (mode) => ipcRenderer.invoke('account:load', mode),
   runDiagnostic: (checkId, projectId) => ipcRenderer.invoke('diagnostic:run', checkId, projectId),
   terminalStart: (projectId) => ipcRenderer.invoke('terminal:start', projectId),
   terminalWrite: (sessionId, data) => ipcRenderer.invoke('terminal:write', sessionId, data),

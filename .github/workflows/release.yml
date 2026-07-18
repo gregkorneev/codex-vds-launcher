@@ -46,7 +46,7 @@ jobs:
           test -n "$(find dist -maxdepth 1 -name '*.dmg' -print -quit)"
           test -n "$(find dist -maxdepth 1 -name '*.zip' -print -quit)"
           test -f dist/beta-mac.yml
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.6$' dist/beta-mac.yml
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.7$' dist/beta-mac.yml
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -87,7 +87,7 @@ jobs:
         run: |
           test -n "$(find dist -maxdepth 1 -name '*win-x64.exe' -print -quit)"
           test -f dist/beta.yml
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.6$' dist/beta.yml
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.7$' dist/beta.yml
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -115,34 +115,32 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_TITLE: Codex CLI Launcher Developer Beta 6
+          RELEASE_TITLE: Codex CLI Launcher Developer Beta 7
         run: |
           cat > release-notes.md <<'EOF'
           ## Русский
 
-          Codex VDS Launcher теперь называется **Codex CLI Launcher**. Developer Beta 6 делает два режима работы явными и упрощает навигацию.
+          **Codex CLI Launcher Developer Beta 7** улучшает управление проектами, быстрыми действиями, режимами работы и профилем Codex.
 
           Главное:
-          - В «Настройках» появился переключатель «На этом компьютере / На VDS через SSH».
-          - В локальном режиме показываются только локальные проекты; конфигурация VDS и карточки статуса сервера скрыты.
-          - При добавлении проекта выбор папки автоматически соответствует текущему режиму.
-          - Быстрые промпты и команды объединены в один сворачиваемый раздел «Быстрые действия».
-          - «Проекты», «Обновления», «Локальные MD» и «Быстрые действия» сворачиваются, показывают стрелку и запоминают состояние.
-          - Приветственный экран объясняет оба режима и показывает изменения текущей версии после каждого обновления.
-          - Артефакты и интерфейс используют новое название Codex CLI Launcher.
+          - Созданные пользователем проекты теперь можно удалить и в локальном режиме, и в режиме VDS. Удаляется только запись из Launcher — папка и файлы проекта остаются на месте.
+          - Быстрые промпты и команды больше не разделены визуально: они показаны одним списком «Быстрые действия» и одинаково вставляют текст в активную сессию.
+          - Выбор режима работы продублирован в меню «Подключение» на macOS и в контекстном меню трея Windows.
+          - Внизу левой панели появился раскрываемый профиль Codex. Он показывает авторизованный аккаунт, тариф, оставшийся процент лимитов и время их обновления.
+          - Профиль автоматически использует локальный Codex CLI или Codex CLI на выбранной VDS и не читает и не показывает токены.
+          - Обновлены иконки приложения для macOS, Windows, Windows-трея и интерфейса Launcher.
 
           ## English
 
-          Codex VDS Launcher is now **Codex CLI Launcher**. Developer Beta 6 makes both working modes explicit and simplifies navigation.
+          **Codex CLI Launcher Developer Beta 7** improves project management, quick actions, working-mode access, and the Codex account profile.
 
           Highlights:
-          - A new Settings switch selects “On this computer” or “On a VDS over SSH”.
-          - Local mode shows only local projects and hides VDS configuration and server-status cards.
-          - Adding a project automatically uses the folder picker for the selected mode.
-          - Quick prompts and commands are combined into one collapsible Quick actions section.
-          - Projects, Updates, Local MD, and Quick actions are collapsible, show an arrow, and remember their state.
-          - The welcome screen explains both modes and shows the current version changes after every update.
-          - Artifacts and the interface now use the Codex CLI Launcher name.
+          - User-created projects can now be removed in both local and VDS modes. Only the Launcher entry is removed; the project folder and files remain untouched.
+          - Quick prompts and commands are no longer split visually: they appear in one Quick actions list and consistently insert text into the active session.
+          - Working-mode selection is duplicated in the macOS Connection menu and the Windows tray context menu.
+          - An expandable Codex profile at the bottom of the left panel shows the signed-in account, plan, remaining limit percentage, and reset times.
+          - The profile automatically queries either the local Codex CLI or the selected VDS Codex CLI without reading or exposing tokens.
+          - Application icons have been updated for macOS, Windows, the Windows tray, and the Launcher interface.
 
           This is a prerelease. The macOS app is ad-hoc signed and is not notarized.
           EOF
@@ -173,8 +171,8 @@ jobs:
 
           metadata_dir="$(mktemp -d)"
           gh release download "$RELEASE_TAG" -p beta-mac.yml -p beta.yml -D "$metadata_dir"
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.6$' "$metadata_dir/beta-mac.yml"
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.6$' "$metadata_dir/beta.yml"
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.7$' "$metadata_dir/beta-mac.yml"
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.7$' "$metadata_dir/beta.yml"
 
           latest_stable="$(gh api "repos/$GH_REPO/releases/latest" --jq .tag_name 2>/dev/null || true)"
           test "$latest_stable" != "$RELEASE_TAG"

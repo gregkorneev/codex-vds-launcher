@@ -18,6 +18,7 @@ const {
   isAllowedReleaseUrl,
   releaseUrlForVersion
 } = require('./shared/update-policy');
+const { normalizeCodexAccount } = require('./shared/codex-account');
 
 const APP_NAME = 'Codex CLI Launcher';
 const BETA_APP_NAME = 'Codex CLI Launcher Beta';
@@ -25,7 +26,7 @@ const APP_VERSION = packageJson.version;
 const IS_BETA_BUILD = /(?:^|-)beta(?:\.|$)/i.test(APP_VERSION);
 const APP_DISPLAY_NAME = IS_BETA_BUILD ? (packageJson.desktopName || BETA_APP_NAME) : APP_NAME;
 const UPDATE_CHANNEL = getUpdateChannel(APP_VERSION);
-const RELEASE_NAME = packageJson.releaseName || 'Codex CLI Launcher Developer Beta 6';
+const RELEASE_NAME = packageJson.releaseName || 'Codex CLI Launcher Developer Beta 7';
 const DISPLAY_VERSION = packageJson.displayVersion || packageJson.version;
 const SSH_CONNECT_TIMEOUT_SECONDS = 15;
 const DIAGNOSTIC_TIMEOUT_MS = 30000;
@@ -46,7 +47,9 @@ const GITHUB_OWNER = 'gregkorneev';
 const GITHUB_REPO = 'codex-vds-launcher';
 const RENDERER_ASSETS_DIR = path.join(__dirname, 'renderer', 'assets');
 const APP_ICON_PATH = path.join(RENDERER_ASSETS_DIR, 'app-icon.png');
-const TRAY_ICON_PATH = path.join(RENDERER_ASSETS_DIR, 'tray-iconTemplate@2x.png');
+const TRAY_ICON_PATH = process.platform === 'darwin'
+  ? path.join(RENDERER_ASSETS_DIR, 'tray-iconTemplate@2x.png')
+  : APP_ICON_PATH;
 
 const DEFAULT_QUICK_PROMPTS = [
   {
@@ -621,14 +624,134 @@ async function addUserProject(value = {}) {
   return { ok: true, project, config: nextConfig };
 }
 
+function deleteUserProject(projectId) {
+  const config = getConfig();
+  const project = config.projects.find((item) => item.id === projectId);
+  if (!project?.custom) return { ok: false, error: 'Only projects added by the user can be removed.' };
+
+  for (const [sessionId, session] of sessions) {
+    if (session.projectId === projectId) stopTerminalSession(sessionId);
+  }
+
+  const projects = loadUserProjects(config.projectsRoot).filter((item) => item.id !== projectId);
+  saveUserProjects(projects, config.projectsRoot);
+  const nextConfig = loadAppConfig();
+  const history = loadHistory();
+  delete history.buffers[projectId];
+  if (!getProject(history.activeTargetId)) history.activeTargetId = nextConfig.projects[0]?.id || '';
+  const nextHistory = saveHistory(history);
+  setupApplicationMenu();
+  return { ok: true, projectId, config: nextConfig, history: nextHistory };
+}
+
+function codexAccountProcess(mode) {
+  const config = getConfig();
+  if (mode === 'vds') {
+    const ssh = resolveSshExecutable();
+    if (!ssh.ok) return ssh;
+    return {
+      ok: true,
+      command: ssh.path,
+      args: [
+        '-T', '-o', 'BatchMode=yes', '-o', `ConnectTimeout=${SSH_CONNECT_TIMEOUT_SECONDS}`,
+        config.sshAlias, `${config.codexCommand} app-server --listen stdio://`
+      ]
+    };
+  }
+
+  const codex = resolveCodexExecutable();
+  if (!codex.ok) return codex;
+  if (process.platform === 'win32' && /\.(?:cmd|bat)$/i.test(codex.path)) {
+    return {
+      ok: true,
+      command: process.env.ComSpec || 'cmd.exe',
+      args: ['/d', '/s', '/c', `"${codex.path}" app-server --listen stdio://`]
+    };
+  }
+  return { ok: true, command: codex.path, args: ['app-server', '--listen', 'stdio://'] };
+}
+
+function loadCodexAccount(requestedMode) {
+  const mode = requestedMode === 'vds' ? 'vds' : 'local';
+  const spec = codexAccountProcess(mode);
+  if (!spec.ok) return Promise.resolve({ ok: false, mode, error: spec.error });
+
+  return new Promise((resolve) => {
+    const child = spawn(spec.command, spec.args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    const responses = new Map();
+    let stdout = '';
+    let stderr = '';
+    let finished = false;
+    const finish = (result) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      if (!child.killed) child.kill();
+      resolve(result);
+    };
+    const send = (message) => {
+      if (!child.stdin.destroyed) child.stdin.write(`${JSON.stringify(message)}\n`);
+    };
+    const timer = setTimeout(() => finish({ ok: false, mode, error: 'Codex account request timed out.' }), 20000);
+
+    child.on('error', (error) => finish({ ok: false, mode, error: error.message || String(error) }));
+    child.stdin.on('error', (error) => finish({ ok: false, mode, error: error.message || String(error) }));
+    child.stderr.on('data', (data) => { stderr = `${stderr}${data}`.slice(-1000); });
+    child.stdout.on('data', (data) => {
+      stdout += data;
+      let newline;
+      while ((newline = stdout.indexOf('\n')) >= 0) {
+        const line = stdout.slice(0, newline).trim();
+        stdout = stdout.slice(newline + 1);
+        if (!line) continue;
+
+        let message;
+        try { message = JSON.parse(line); } catch (_error) { continue; }
+        if (message.id === 1 && message.result) {
+          send({ method: 'initialized' });
+          send({ id: 2, method: 'account/read', params: { refreshToken: false } });
+          send({ id: 3, method: 'account/rateLimits/read' });
+          continue;
+        }
+        if (message.id === 1 && message.error) {
+          finish({ ok: false, mode, error: message.error.message || 'Could not initialize Codex.' });
+          continue;
+        }
+        if (message.id === 2 || message.id === 3) responses.set(message.id, message);
+        if (responses.has(2) && responses.has(3)) {
+          const accountMessage = responses.get(2);
+          const limitsMessage = responses.get(3);
+          if (accountMessage.error) {
+            finish({ ok: false, mode, error: accountMessage.error.message || 'Could not read the Codex account.' });
+          } else {
+            finish({
+              ...normalizeCodexAccount(accountMessage.result, limitsMessage.result, mode),
+              limitsError: limitsMessage.error?.message || ''
+            });
+          }
+        }
+      }
+    });
+    child.on('close', () => {
+      if (!finished) finish({ ok: false, mode, error: stderr.trim() || 'Codex account request ended unexpectedly.' });
+    });
+
+    send({
+      id: 1,
+      method: 'initialize',
+      params: { clientInfo: { name: 'codex-cli-launcher', title: APP_NAME, version: APP_VERSION } }
+    });
+  });
+}
+
 function sendToRenderer(channel, payload) {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send(channel, payload);
   }
 }
 
-function sendUiCommand(command) {
-  sendToRenderer('ui:command', { command });
+function sendUiCommand(command, payload = {}) {
+  sendToRenderer('ui:command', { command, ...payload });
 }
 
 function updateStatus(overrides = {}) {
@@ -1511,6 +1634,22 @@ function configureAboutPanel() {
   });
 }
 
+function setLauncherMode(launcherMode) {
+  const mode = launcherMode === 'local' ? 'local' : 'vds';
+  saveSettings({ launcherMode: mode });
+  sendUiCommand('set-launcher-mode', { mode });
+  setupApplicationMenu();
+  createTray();
+}
+
+function launcherModeMenuItems() {
+  const mode = loadSettings().launcherMode;
+  return [
+    { label: 'На этом компьютере', type: 'radio', checked: mode === 'local', click: () => setLauncherMode('local') },
+    { label: 'На VDS через SSH', type: 'radio', checked: mode === 'vds', click: () => setLauncherMode('vds') }
+  ];
+}
+
 function setupApplicationMenu() {
   const appMenu = [
     { label: `О ${APP_DISPLAY_NAME}`, role: 'about' },
@@ -1537,6 +1676,10 @@ function setupApplicationMenu() {
     {
       label: 'Подключение',
       submenu: [
+        ...(process.platform === 'darwin' ? [
+          { label: 'Режим работы', submenu: launcherModeMenuItems() },
+          { type: 'separator' }
+        ] : []),
         { label: 'Инструкция подключения к VDS', accelerator: 'CmdOrCtrl+Shift+/', click: () => sendUiCommand('show-setup-guide') },
         { label: 'Открыть config.json', accelerator: 'CmdOrCtrl+,', click: () => sendUiCommand('open-config') },
         { label: 'Перезагрузить config.json', accelerator: 'CmdOrCtrl+R', click: () => sendUiCommand('reload-config') },
@@ -1606,18 +1749,21 @@ function showMainWindow() {
 }
 
 function createTray() {
-  if (tray) {
-    return;
+  if (!tray) {
+    const image = nativeImage.createFromPath(TRAY_ICON_PATH);
+    const trayImage = process.platform === 'darwin' ? image.resize({ width: 18, height: 18 }) : image;
+    trayImage.setTemplateImage(process.platform === 'darwin');
+    tray = new Tray(trayImage);
+    tray.setToolTip(APP_DISPLAY_NAME);
+    tray.on('click', showMainWindow);
   }
-
-  const image = nativeImage.createFromPath(TRAY_ICON_PATH);
-  const trayImage = process.platform === 'darwin' ? image.resize({ width: 18, height: 18 }) : image;
-  trayImage.setTemplateImage(process.platform === 'darwin');
-  tray = new Tray(trayImage);
-  tray.setToolTip(APP_DISPLAY_NAME);
 
   const contextMenu = Menu.buildFromTemplate([
     { label: `Открыть ${APP_DISPLAY_NAME}`, click: showMainWindow },
+    ...(process.platform === 'win32' ? [
+      { label: 'Режим работы', submenu: launcherModeMenuItems() },
+      { type: 'separator' }
+    ] : []),
     { label: 'Инструкция подключения', click: () => sendUiCommand('show-setup-guide') },
     {
       label: 'Открыть первый проект во внешнем терминале',
@@ -1660,7 +1806,6 @@ function createTray() {
   ]);
 
   tray.setContextMenu(contextMenu);
-  tray.on('click', showMainWindow);
 }
 
 function registerHandlers() {
@@ -1696,6 +1841,12 @@ function registerHandlers() {
     }
     return result;
   });
+  ipcMain.handle('projects:delete', (_event, projectId) => {
+    const result = deleteUserProject(projectId);
+    if (result.ok) sendToRenderer('config:changed', { config: result.config, history: result.history });
+    return result;
+  });
+  ipcMain.handle('account:load', (_event, mode) => loadCodexAccount(mode));
 
   ipcMain.handle('terminal:start', startTerminalSession);
   ipcMain.handle('terminal:write', (_event, sessionId, data) => writeTerminalSession(sessionId, data));
@@ -1721,7 +1872,15 @@ function registerHandlers() {
   });
 
   ipcMain.handle('settings:load', () => loadSettings());
-  ipcMain.handle('settings:save', (_event, settings) => saveSettings(settings));
+  ipcMain.handle('settings:save', (_event, settings) => {
+    const previousMode = loadSettings().launcherMode;
+    const saved = saveSettings(settings);
+    if (saved.launcherMode !== previousMode) {
+      setupApplicationMenu();
+      createTray();
+    }
+    return saved;
+  });
   ipcMain.handle('settings:defaultAgentInstructions', () => DEFAULT_AGENT_INSTRUCTIONS);
   ipcMain.handle('markdown:selectInstructionFile', () => selectMarkdownInstructionFile());
   ipcMain.handle('markdown:readInstructionFile', (_event, filePath) => readMarkdownInstructionFile(filePath));

@@ -89,6 +89,20 @@
           <h2 data-i18n="history">История</h2>
           <button type="button" class="danger-button" id="clearHistory" title="Очистить сохранённую историю" data-i18n="clearHistory" data-i18n-attr="title:clearHistoryTitle">Очистить историю</button>
         </section>
+
+        <details class="account-profile" id="accountProfile">
+          <summary>
+            <span class="account-avatar" aria-hidden="true">C</span>
+            <span class="account-identity">
+              <strong id="accountName" data-i18n="accountLoading">Проверяем аккаунт Codex…</strong>
+              <small id="accountPlan"></small>
+            </span>
+          </summary>
+          <div class="account-details">
+            <div class="account-limits" id="accountLimits"></div>
+            <button type="button" class="secondary-button full-width-button" id="refreshAccount" data-i18n="refreshAccount">Обновить лимиты</button>
+          </div>
+        </details>
       </aside>
 
       <section class="terminal-workspace">
@@ -130,7 +144,7 @@
             <button type="button" class="secondary-button full-width-button" id="checkUpdates" data-i18n="checkUpdates">Проверить обновления</button>
             <button type="button" class="primary-button full-width-button" id="updateApp" data-i18n="updateApp" hidden>Обновить приложение</button>
             <p class="update-status" id="updateStatus" data-i18n="updateIdle">Обновления не проверялись</p>
-            <p class="version-note"><span data-i18n="versionLabel">Версия</span> <strong id="appVersionLabel">Developer Beta 6 (1.0.0-beta.6)</strong></p>
+            <p class="version-note"><span data-i18n="versionLabel">Версия</span> <strong id="appVersionLabel">Developer Beta 7 (1.0.0-beta.7)</strong></p>
           </div>
         </details>
 
@@ -143,22 +157,11 @@
         </details>
 
         <details class="panel-section disclosure-section panel-disclosure" data-section="quickActions" open>
-          <summary data-i18n="quickActions">Быстрые действия</summary>
-          <div class="quick-actions disclosure-content">
-            <section class="quick-actions-group">
-              <header class="panel-heading">
-                <h2 data-i18n="quickPrompts">Промпты</h2>
-                <button type="button" class="mini-button add-button" id="addQuickPrompt" title="Добавить быстрый промпт" aria-label="Добавить быстрый промпт" data-i18n-attr="title:addQuickPrompt;aria-label:addQuickPrompt">＋</button>
-              </header>
-              <div class="prompt-list" id="quickPrompts"></div>
-            </section>
-            <section class="quick-actions-group">
-              <header class="panel-heading">
-                <h2 data-i18n="quickCommands">Команды</h2>
-                <button type="button" class="mini-button add-button" id="addQuickCommandSet" title="Добавить набор команд" aria-label="Добавить набор команд" data-i18n-attr="title:addCommandSet;aria-label:addCommandSet">＋</button>
-              </header>
-              <div class="prompt-list" id="quickCommandSets"></div>
-            </section>
+          <summary class="section-summary-with-action">
+            <span data-i18n="quickActions">Быстрые действия</span>
+            <button type="button" class="mini-button add-button" id="addQuickAction" title="Добавить быстрое действие" aria-label="Добавить быстрое действие" data-i18n-attr="title:addQuickAction;aria-label:addQuickAction">＋</button>
+          </summary>
+          <div class="prompt-list disclosure-content" id="quickActionsList">
           </div>
         </details>
       </aside>
@@ -241,7 +244,7 @@
       <form class="dialog-card guide-card" method="dialog">
         <header class="dialog-heading">
           <div>
-            <p class="dialog-kicker" id="setupGuideKicker">Codex CLI Launcher Developer Beta 6</p>
+            <p class="dialog-kicker" id="setupGuideKicker">Codex CLI Launcher Developer Beta 7</p>
             <h2 id="setupGuideTitle">Настройка подключения к VDS</h2>
           </div>
           <button type="button" class="mini-button" id="closeSetupGuide" title="Закрыть" aria-label="Закрыть" data-i18n-attr="title:close;aria-label:close">×</button>

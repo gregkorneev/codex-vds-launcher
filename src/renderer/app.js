@@ -1,20 +1,20 @@
-const DISPLAY_VERSION = 'Developer Beta 6 (1.0.0-beta.6)';
-const RELEASE_NAME = 'Codex CLI Launcher Developer Beta 6';
+const DISPLAY_VERSION = 'Developer Beta 7 (1.0.0-beta.7)';
+const RELEASE_NAME = 'Codex CLI Launcher Developer Beta 7';
 
 const RELEASE_CHANGES = {
   ru: [
-    'Новое название продукта: Codex CLI Launcher.',
-    'Явный переключатель между локальным режимом и VDS через SSH.',
-    'VDS-разделы скрываются в локальном режиме.',
-    'Промпты и команды объединены в сворачиваемые «Быстрые действия».',
-    'Проекты, обновления, локальные MD и быстрые действия теперь сворачиваются.'
+    'Созданные пользователем локальные и VDS-проекты теперь можно удалить из Launcher без удаления файлов.',
+    'Промпты и команды отображаются единым списком «Быстрые действия».',
+    'Режим работы продублирован в меню «Подключение» на macOS и в трее Windows.',
+    'Внизу левой панели появился профиль Codex с аккаунтом, остатком лимитов и временем их обновления.',
+    'Иконки приложения для macOS, Windows и интерфейса обновлены.'
   ],
   en: [
-    'The product is now named Codex CLI Launcher.',
-    'A clear switch between local mode and VDS over SSH.',
-    'VDS-only sections are hidden in local mode.',
-    'Prompts and commands are combined into collapsible Quick actions.',
-    'Projects, updates, local MD, and quick actions are now collapsible.'
+    'User-created local and VDS projects can now be removed from Launcher without deleting their files.',
+    'Prompts and commands are presented as one Quick actions list.',
+    'The working mode is also available in the macOS Connection menu and the Windows tray.',
+    'A Codex profile at the bottom of the left panel shows the account, remaining limits, and reset times.',
+    'The macOS, Windows, and in-app icons have been updated.'
   ]
 };
 
@@ -76,6 +76,7 @@ const TRANSLATIONS = {
     projects: 'Проекты',
     sessions: 'Сессии',
     addProject: 'Добавить проект',
+    deleteProject: 'Удалить проект',
     add: 'Добавить',
     projectLocation: 'Где запустить Codex',
     projectRemote: 'На VDS',
@@ -137,6 +138,7 @@ const TRANSLATIONS = {
     runMarkdown: 'Выполнить Markdown',
     dropMarkdown: 'Перетащите .md сюда',
     quickActions: 'Быстрые действия',
+    addQuickAction: 'Добавить быстрое действие',
     quickPrompts: 'Промпты',
     quickCommands: 'Команды',
     noProjects: 'В этом режиме пока нет проектов. Добавьте первый проект кнопкой ＋.',
@@ -208,6 +210,17 @@ const TRANSLATIONS = {
     quickPromptPlaceholder: 'Промпт, который будет вставлен в активную консоль',
     deletePrompt: 'Удалить',
     editPrompt: 'Изменить',
+    addQuickActionDialog: 'Добавить быстрое действие',
+    editQuickActionDialog: 'Изменить быстрое действие',
+    quickActionPlaceholder: 'Текст, который будет вставлен в активную консоль',
+    accountLoading: 'Проверяем аккаунт Codex…',
+    accountUnavailable: 'Профиль Codex недоступен',
+    accountNotSignedIn: 'Codex не авторизован',
+    apiKeyAccount: 'Аккаунт API key',
+    refreshAccount: 'Обновить лимиты',
+    limitsRemaining: 'Осталось',
+    resetsAt: 'Обновится',
+    noLimitData: 'Данные о лимитах недоступны.',
     localMarkdownInstruction: 'Выполни инструкции из локального Markdown-файла пользователя.',
     localMarkdownNoFs: 'Удалённый сервер не имеет доступа к локальной файловой системе. Используй только содержимое ниже.'
   },
@@ -217,6 +230,7 @@ const TRANSLATIONS = {
     projects: 'Projects',
     sessions: 'Sessions',
     addProject: 'Add project',
+    deleteProject: 'Delete project',
     add: 'Add',
     projectLocation: 'Where to run Codex',
     projectRemote: 'On the VDS',
@@ -278,6 +292,7 @@ const TRANSLATIONS = {
     runMarkdown: 'Run Markdown',
     dropMarkdown: 'Drop .md here',
     quickActions: 'Quick actions',
+    addQuickAction: 'Add quick action',
     quickPrompts: 'Prompts',
     quickCommands: 'Commands',
     noProjects: 'There are no projects in this mode yet. Add one with the ＋ button.',
@@ -349,6 +364,17 @@ const TRANSLATIONS = {
     quickPromptPlaceholder: 'Prompt that will be inserted into the active terminal',
     deletePrompt: 'Delete',
     editPrompt: 'Edit',
+    addQuickActionDialog: 'Add quick action',
+    editQuickActionDialog: 'Edit quick action',
+    quickActionPlaceholder: 'Text that will be inserted into the active terminal',
+    accountLoading: 'Checking Codex account…',
+    accountUnavailable: 'Codex profile unavailable',
+    accountNotSignedIn: 'Codex is not signed in',
+    apiKeyAccount: 'API key account',
+    refreshAccount: 'Refresh limits',
+    limitsRemaining: 'Remaining',
+    resetsAt: 'Resets',
+    noLimitData: 'Limit data is unavailable.',
     localMarkdownInstruction: 'Run the instructions from the user selected local Markdown file.',
     localMarkdownNoFs: 'The remote server cannot access the local file system. Use only the content pasted below.'
   }
@@ -370,8 +396,7 @@ const historyStatus = document.querySelector('#historyStatus');
 const configPath = document.querySelector('#configPath');
 const configErrors = document.querySelector('#configErrors');
 const codexCommandHelp = document.querySelector('#codexCommandHelp');
-const quickPrompts = document.querySelector('#quickPrompts');
-const quickCommandSets = document.querySelector('#quickCommandSets');
+const quickActionsList = document.querySelector('#quickActionsList');
 const statusCards = document.querySelector('#statusCards');
 const startSessionButton = document.querySelector('#startSession');
 const stopSessionButton = document.querySelector('#stopSession');
@@ -402,8 +427,7 @@ const openConfigButton = document.querySelector('#openConfigFile');
 const reloadConfigButton = document.querySelector('#reloadConfig');
 const copySshConfigButton = document.querySelector('#copySshConfig');
 const openSetupGuideButton = document.querySelector('#openSetupGuide');
-const addQuickPromptButton = document.querySelector('#addQuickPrompt');
-const addQuickCommandSetButton = document.querySelector('#addQuickCommandSet');
+const addQuickActionButton = document.querySelector('#addQuickAction');
 const quickItemDialog = document.querySelector('#quickItemDialog');
 const quickItemForm = document.querySelector('#quickItemForm');
 const quickItemDialogTitle = document.querySelector('#quickItemDialogTitle');
@@ -433,6 +457,11 @@ const projectLocalPath = document.querySelector('#projectLocalPath');
 const projectError = document.querySelector('#projectError');
 const cancelProjectButton = document.querySelector('#cancelProject');
 const cancelProjectFooterButton = document.querySelector('#cancelProjectFooter');
+const accountProfile = document.querySelector('#accountProfile');
+const accountName = document.querySelector('#accountName');
+const accountPlan = document.querySelector('#accountPlan');
+const accountLimits = document.querySelector('#accountLimits');
+const refreshAccountButton = document.querySelector('#refreshAccount');
 
 const terminal = new Terminal({
   cursorBlink: true,
@@ -468,6 +497,8 @@ let quickItemEditor = null;
 let sshStatusRendered = false;
 let currentUpdateState = { status: 'idle' };
 let selectedLocalProjectPath = '';
+let codexAccount = null;
+let codexAccountLoadedAt = 0;
 
 let currentSettings = {
   launcherMode: 'vds',
@@ -550,6 +581,7 @@ function applyI18n() {
   renderConfigSummary();
   renderStatusCards();
   renderQuickLists();
+  renderCodexAccount(codexAccount);
   updateStatusText(currentUpdateState);
   updateControls();
 }
@@ -793,6 +825,98 @@ function updateStatusText(state = {}) {
   }
 }
 
+function accountModeLabel(mode) {
+  return mode === 'vds' ? t('modeVds') : t('modeLocal');
+}
+
+function limitWindowLabel(limit) {
+  const minutes = limit.windowDurationMins;
+  if (!minutes) return limit.name;
+  if (minutes % 10080 === 0) {
+    const weeks = minutes / 10080;
+    return currentSettings.language === 'en' ? `${weeks}-week limit` : `Лимит на ${weeks} нед.`;
+  }
+  if (minutes % 60 === 0) {
+    const hours = minutes / 60;
+    return currentSettings.language === 'en' ? `${hours}-hour limit` : `Лимит на ${hours} ч.`;
+  }
+  return currentSettings.language === 'en' ? `${minutes}-minute limit` : `Лимит на ${minutes} мин.`;
+}
+
+function renderCodexAccount(profile) {
+  accountLimits.innerHTML = '';
+  if (!profile) {
+    accountName.textContent = t('accountLoading');
+    accountPlan.textContent = accountModeLabel(currentSettings.launcherMode);
+    return;
+  }
+  if (!profile.ok) {
+    accountName.textContent = t('accountUnavailable');
+    accountPlan.textContent = accountModeLabel(profile.mode);
+    const error = document.createElement('p');
+    error.className = 'account-error';
+    error.textContent = profile.error || t('noLimitData');
+    accountLimits.appendChild(error);
+    return;
+  }
+  if (!profile.signedIn) {
+    accountName.textContent = t('accountNotSignedIn');
+    accountPlan.textContent = accountModeLabel(profile.mode);
+    return;
+  }
+
+  accountName.textContent = profile.email || t('apiKeyAccount');
+  const plan = profile.planType ? profile.planType.charAt(0).toUpperCase() + profile.planType.slice(1) : '';
+  accountPlan.textContent = [plan, accountModeLabel(profile.mode)].filter(Boolean).join(' · ');
+
+  profile.limits.forEach((limit) => {
+    const row = document.createElement('div');
+    row.className = 'account-limit-row';
+    const title = document.createElement('strong');
+    title.textContent = limitWindowLabel(limit);
+    const remaining = document.createElement('span');
+    remaining.textContent = `${t('limitsRemaining')}: ${limit.remainingPercent}%`;
+    const reset = document.createElement('small');
+    reset.textContent = limit.resetsAt
+      ? `${t('resetsAt')}: ${new Intl.DateTimeFormat(currentSettings.language, { dateStyle: 'short', timeStyle: 'short' }).format(limit.resetsAt * 1000)}`
+      : `${t('resetsAt')}: —`;
+    row.append(title, remaining, reset);
+    accountLimits.appendChild(row);
+  });
+
+  if (profile.limits.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'account-error';
+    empty.textContent = profile.limitsError || t('noLimitData');
+    accountLimits.appendChild(empty);
+  }
+}
+
+async function refreshCodexAccount() {
+  refreshAccountButton.disabled = true;
+  codexAccount = null;
+  renderCodexAccount(null);
+  try {
+    codexAccount = await api.loadCodexAccount(currentSettings.launcherMode);
+  } catch (error) {
+    codexAccount = { ok: false, mode: currentSettings.launcherMode, error: error.message || String(error) };
+  }
+  codexAccountLoadedAt = Date.now();
+  refreshAccountButton.disabled = false;
+  renderCodexAccount(codexAccount);
+}
+
+function setLauncherMode(mode) {
+  const launcherMode = normalizeLauncherMode(mode);
+  if (launcherMode === currentSettings.launcherMode) return;
+  currentSettings = { ...currentSettings, launcherMode };
+  applySettings(currentSettings);
+  renderActiveBuffer();
+  if (launcherMode === 'vds') renderSshSetupStatus();
+  saveSettingsSoon();
+  refreshCodexAccount();
+}
+
 function saveSettingsSoon() {
   window.clearTimeout(saveSettingsTimer);
   saveSettingsTimer = window.setTimeout(() => {
@@ -907,6 +1031,7 @@ function renderProjectList() {
 
     const row = document.createElement('article');
     row.className = 'project-row';
+    row.classList.toggle('custom', project.custom);
     row.dataset.project = project.id;
     row.addEventListener('click', (event) => {
       if (!event.target.closest('button')) {
@@ -929,12 +1054,21 @@ function renderProjectList() {
     startButton.textContent = '▶';
     startButton.addEventListener('click', () => startSession(project.id));
 
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'icon-button project-delete';
+    deleteButton.title = `${t('deleteProject')} ${project.name}`;
+    deleteButton.setAttribute('aria-label', `${t('deleteProject')} ${project.name}`);
+    deleteButton.textContent = '×';
+    deleteButton.hidden = !project.custom;
+    deleteButton.addEventListener('click', () => deleteProject(project));
+
     const state = document.createElement('span');
     state.className = 'project-state';
     state.dataset.stateTarget = project.id;
     state.textContent = statusText(sessionStatus(project.id));
 
-    row.append(text, startButton, state);
+    row.append(text, startButton, deleteButton, state);
     projectList.appendChild(row);
 
     const chip = document.createElement('button');
@@ -950,6 +1084,26 @@ function renderProjectList() {
     chip.append(dot, document.createTextNode(project.name));
     sessionList.appendChild(chip);
   });
+}
+
+async function deleteProject(project) {
+  const message = currentSettings.language === 'en'
+    ? `Remove "${project.name}" from Launcher? The project folder and its files will not be deleted.`
+    : `Удалить «${project.name}» из Launcher? Папка проекта и файлы останутся на месте.`;
+  if (!window.confirm(message)) return;
+
+  try {
+    const result = await api.deleteProject(project.id);
+    if (!result.ok) throw new Error(result.error || 'Could not remove the project.');
+    delete sessionsByProject[project.id];
+    delete buffersByProject[project.id];
+    applyConfig(result.config);
+    applyHistory(result.history, { emptyAllowed: true });
+    renderActiveBuffer();
+    updateControls();
+  } catch (error) {
+    writeLocal(activeProjectId, `\r\n[project] ${t('statusError')}: ${error.message || String(error)}\r\n`);
+  }
 }
 
 function updateProjectLocationFields() {
@@ -1322,13 +1476,6 @@ function insertPrompt(prompt) {
   });
 }
 
-function insertCommandSet(commandText) {
-  writeSessionText(commandText, {
-    label: 'quick commands',
-    execute: true
-  });
-}
-
 function buildMarkdownInstructionPrompt(file) {
   return [
     t('localMarkdownInstruction'),
@@ -1417,10 +1564,10 @@ async function resetAgentInstructions() {
   }
 }
 
-function renderQuickItems(container, items, kind) {
+function renderQuickItems(container, entries) {
   container.innerHTML = '';
 
-  items.forEach((item, index) => {
+  entries.forEach(({ item, kind, index }) => {
     const row = document.createElement('div');
     row.className = 'quick-item-row';
 
@@ -1429,13 +1576,7 @@ function renderQuickItems(container, items, kind) {
     mainButton.className = 'quick-main-button';
     mainButton.textContent = item.title;
     mainButton.title = item.title;
-    mainButton.addEventListener('click', () => {
-      if (kind === 'prompt') {
-        insertPrompt(item.text);
-      } else {
-        insertCommandSet(item.text);
-      }
-    });
+    mainButton.addEventListener('click', () => insertPrompt(item.text));
 
     row.append(mainButton);
 
@@ -1462,8 +1603,11 @@ function renderQuickItems(container, items, kind) {
 }
 
 function renderQuickLists() {
-  renderQuickItems(quickPrompts, appConfig.quickPrompts || [], 'prompt');
-  renderQuickItems(quickCommandSets, currentSettings.quickCommandSets, 'command');
+  const entries = [
+    ...(appConfig.quickPrompts || []).map((item, index) => ({ item, kind: 'prompt', index })),
+    ...currentSettings.quickCommandSets.map((item, index) => ({ item, kind: 'command', index }))
+  ];
+  renderQuickItems(quickActionsList, entries);
 }
 
 function openQuickItemEditor(kind = 'command', index = -1) {
@@ -1471,12 +1615,10 @@ function openQuickItemEditor(kind = 'command', index = -1) {
   const source = isPrompt ? appConfig.quickPrompts || [] : currentSettings.quickCommandSets;
   const item = index >= 0 ? source[index] : null;
   quickItemEditor = { kind, index };
-  quickItemDialogTitle.textContent = item
-    ? t(isPrompt ? 'editQuickPromptDialog' : 'editQuickCommandSetDialog')
-    : t(isPrompt ? 'addQuickPromptDialog' : 'addQuickCommandSetDialog');
+  quickItemDialogTitle.textContent = t(item ? 'editQuickActionDialog' : 'addQuickActionDialog');
   quickItemTitle.value = item?.title || '';
   quickItemText.value = item?.text || '';
-  quickItemText.placeholder = t(isPrompt ? 'quickPromptPlaceholder' : 'commandSetPlaceholder');
+  quickItemText.placeholder = t('quickActionPlaceholder');
   quickItemDialog.showModal();
   quickItemTitle.focus();
 }
@@ -1520,7 +1662,7 @@ async function saveQuickItem(event) {
         appConfig = result.config;
       }
     } catch (error) {
-      writeLocal(activeProjectId, `\r\n[quick prompts] ${t('statusError')}: ${error.message || String(error)}\r\n`);
+      writeLocal(activeProjectId, `\r\n[quick actions] ${t('statusError')}: ${error.message || String(error)}\r\n`);
       return;
     }
   } else {
@@ -1561,7 +1703,7 @@ async function deleteQuickItem(kind, index) {
         appConfig = result.config;
       }
     } catch (error) {
-      writeLocal(activeProjectId, `\r\n[quick prompts] ${t('statusError')}: ${error.message || String(error)}\r\n`);
+      writeLocal(activeProjectId, `\r\n[quick actions] ${t('statusError')}: ${error.message || String(error)}\r\n`);
       return;
     }
   } else {
@@ -1704,7 +1846,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
           <article><strong>On a VDS over SSH</strong><span>Uses your OpenSSH alias and the Codex CLI installed on the server. VDS configuration and status are shown only in this mode.</span></article>
         </section>
         <section class="release-highlights">
-          <h3>What changed in Developer Beta 6</h3>
+          <h3>What changed in Developer Beta 7</h3>
           <ul>${changes}</ul>
         </section>
         <ol class="guide-steps">
@@ -1729,7 +1871,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
         <article><strong>На VDS через SSH</strong><span>Использует ваш OpenSSH alias и Codex CLI на сервере. Конфигурация и статус VDS видны только в этом режиме.</span></article>
       </section>
       <section class="release-highlights">
-        <h3>Что изменилось в Developer Beta 6</h3>
+        <h3>Что изменилось в Developer Beta 7</h3>
         <ul>${changes}</ul>
       </section>
       <ol class="guide-steps">
@@ -1939,8 +2081,10 @@ openConfigButton.addEventListener('click', openConfigFile);
 reloadConfigButton.addEventListener('click', reloadConfig);
 copySshConfigButton.addEventListener('click', copySshConfigExample);
 openSetupGuideButton.addEventListener('click', () => openSetupGuide());
-addQuickPromptButton.addEventListener('click', () => openQuickItemEditor('prompt'));
-addQuickCommandSetButton.addEventListener('click', () => openQuickItemEditor('command'));
+addQuickActionButton.addEventListener('click', (event) => {
+  event.stopPropagation();
+  openQuickItemEditor('command');
+});
 addProjectButton.addEventListener('click', (event) => {
   event.stopPropagation();
   openProjectDialog();
@@ -1955,14 +2099,7 @@ projectDialog.addEventListener('cancel', () => {
   projectForm.reset();
 });
 launcherModeSelect.addEventListener('change', () => {
-  currentSettings = {
-    ...currentSettings,
-    launcherMode: normalizeLauncherMode(launcherModeSelect.value)
-  };
-  applySettings(currentSettings);
-  renderActiveBuffer();
-  if (currentSettings.launcherMode === 'vds') renderSshSetupStatus();
-  saveSettingsSoon();
+  setLauncherMode(launcherModeSelect.value);
 });
 languageSelect.addEventListener('change', () => {
   currentSettings = {
@@ -2044,6 +2181,10 @@ quickItemDialog.addEventListener('cancel', () => {
   quickItemEditor = null;
   quickItemForm.reset();
 });
+refreshAccountButton.addEventListener('click', refreshCodexAccount);
+accountProfile.addEventListener('toggle', () => {
+  if (accountProfile.open && Date.now() - codexAccountLoadedAt > 300000) refreshCodexAccount();
+});
 themeSelect.addEventListener('change', () => {
   currentSettings = {
     ...currentSettings,
@@ -2096,7 +2237,7 @@ api.onConfigChanged(({ config, history }) => {
   updateControls();
 });
 
-api.onUiCommand(({ command }) => {
+api.onUiCommand(({ command, mode }) => {
   const actions = {
     'show-welcome': () => openSetupGuide({ welcome: true }),
     'show-version-welcome': () => openSetupGuide({ welcome: true }),
@@ -2105,6 +2246,7 @@ api.onUiCommand(({ command }) => {
     'reload-config': reloadConfig,
     'copy-ssh-config': copySshConfigExample,
     'add-project': openProjectDialog,
+    'set-launcher-mode': () => setLauncherMode(mode),
     'run-markdown': selectAndRunMarkdownInstruction,
     'edit-agents': openAgentInstructionsEditor,
     'toggle-theme': () => {
@@ -2148,6 +2290,7 @@ async function initialize() {
   }
 
   renderQuickLists();
+  refreshCodexAccount();
   try {
     updateStatusText(await api.getUpdateStatus());
   } catch (_error) {

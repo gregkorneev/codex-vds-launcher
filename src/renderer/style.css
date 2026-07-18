@@ -164,6 +164,8 @@ body.right-panel-hidden .right-panel {
 }
 
 .sidebar {
+  display: flex;
+  flex-direction: column;
   padding: 18px 14px;
 }
 
@@ -347,6 +349,10 @@ body[data-launcher-mode="local"] [data-vds-only] {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.project-row.custom {
+  grid-template-columns: minmax(0, 1fr) 32px 32px;
+}
+
 .project-row.active {
   border-color: rgba(56, 189, 248, 0.62);
   background: var(--accent-soft);
@@ -374,6 +380,96 @@ body[data-launcher-mode="local"] [data-vds-only] {
 
 .project-row.running .project-state {
   color: var(--ok);
+}
+
+.project-delete {
+  border-color: rgba(255, 107, 129, 0.42);
+  color: var(--danger);
+}
+
+.account-profile {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.account-profile summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.account-profile summary::-webkit-details-marker {
+  display: none;
+}
+
+.account-profile summary::after {
+  content: "▸";
+  margin-left: auto;
+  color: var(--muted);
+  transition: transform 120ms ease;
+}
+
+.account-profile[open] summary::after {
+  transform: rotate(90deg);
+}
+
+.account-avatar {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.account-identity {
+  min-width: 0;
+}
+
+.account-identity strong,
+.account-identity small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-identity strong {
+  font-size: 0.84rem;
+}
+
+.account-identity small,
+.account-limit-row small,
+.account-error {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.account-details,
+.account-limits {
+  display: grid;
+  gap: 8px;
+}
+
+.account-details {
+  padding-top: 12px;
+}
+
+.account-limit-row {
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.76rem;
 }
 
 .icon-button,
