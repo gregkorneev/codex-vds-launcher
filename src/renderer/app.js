@@ -1,20 +1,20 @@
-const DISPLAY_VERSION = 'Developer Beta 9 (1.0.0-beta.9)';
-const RELEASE_NAME = 'Codex CLI Launcher Developer Beta 9';
+const DISPLAY_VERSION = 'Version 1 (1.0.0)';
+const RELEASE_NAME = 'Codex CLI Launcher v1';
 
 const RELEASE_CHANGES = {
   ru: [
-    'Историю последнего запуска каждой сессии теперь можно сгрузить в Markdown через кнопку в списке сессий.',
-    'Терминал теперь корректно подстраивается под размер окна и панелей без наложения на правую колонку.',
-    'Профиль Codex отдельно показывает имя пользователя, email, тип подписки, оставшиеся лимиты и время их обновления.',
-    'Профиль поддерживает данные локального Codex CLI и Codex CLI на выбранной VDS без чтения токенов.',
-    'Обновлены иконки приложения для macOS, Windows и интерфейса Launcher; иконки menu bar и tray сохранены.'
+    'Первый стабильный релиз Codex CLI Launcher объединяет возможности Developer Beta 1–9.',
+    'Codex CLI можно запускать локально или на VDS через безопасный пользовательский OpenSSH alias.',
+    'Проекты, сессии, быстрые действия, Markdown-инструкции и локальная история доступны в едином интерфейсе.',
+    'Историю последнего запуска любой сессии можно сгрузить в читаемый Markdown-файл.',
+    'Профиль Codex показывает аккаунт, тариф, остаток лимитов и время их обновления без чтения токенов.'
   ],
   en: [
-    'The latest run of each session can now be exported to Markdown from the session list.',
-    'The terminal now tracks window and panel size changes without overlapping the right column.',
-    'The Codex profile separately shows the username, email, subscription type, remaining limits, and reset times.',
-    'The profile supports both the local Codex CLI and the selected VDS Codex CLI without reading tokens.',
-    'Application icons have been refreshed for macOS, Windows, and the Launcher UI while menu bar and tray icons remain unchanged.'
+    'The first stable Codex CLI Launcher release combines everything delivered in Developer Beta 1–9.',
+    'Codex CLI can run locally or on a VDS through a safe user-managed OpenSSH alias.',
+    'Projects, sessions, quick actions, Markdown instructions, and local history share one interface.',
+    'The latest run of any session can be exported to a readable Markdown file.',
+    'The Codex profile shows the account, plan, remaining limits, and reset times without reading tokens.'
   ]
 };
 
@@ -1923,7 +1923,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
           <article><strong>On a VDS over SSH</strong><span>Uses your OpenSSH alias and the Codex CLI installed on the server. VDS configuration and status are shown only in this mode.</span></article>
         </section>
         <section class="release-highlights">
-          <h3>What changed in Developer Beta 9</h3>
+          <h3>What's included in Codex CLI Launcher v1</h3>
           <ul>${changes}</ul>
         </section>
         <ol class="guide-steps">
@@ -1948,7 +1948,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
         <article><strong>На VDS через SSH</strong><span>Использует ваш OpenSSH alias и Codex CLI на сервере. Конфигурация и статус VDS видны только в этом режиме.</span></article>
       </section>
       <section class="release-highlights">
-        <h3>Что изменилось в Developer Beta 9</h3>
+        <h3>Что входит в Codex CLI Launcher v1</h3>
         <ul>${changes}</ul>
       </section>
       <ol class="guide-steps">
@@ -1964,7 +1964,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
       <section class="guide-hero">
         <img src="./assets/app-icon.png" alt="">
         <div>
-          <h3>${welcome ? 'Welcome to the developer beta' : 'Connect your VDS'}</h3>
+          <h3>Connect your VDS</h3>
           <p class="guide-version-line"><strong>Version:</strong> ${escapeHtml(DISPLAY_VERSION)}</p>
           <p>Run the installed Codex CLI in a local project folder or connect to a VDS through your OpenSSH alias.</p>
         </div>
@@ -2001,7 +2001,7 @@ codex</pre></li>
     <section class="guide-hero">
       <img src="./assets/app-icon.png" alt="">
       <div>
-        <h3>${welcome ? 'Добро пожаловать в developer beta' : 'Подключение к своему VDS'}</h3>
+        <h3>Подключение к своему VDS</h3>
         <p class="guide-version-line"><strong>Версия:</strong> ${escapeHtml(DISPLAY_VERSION)}</p>
         <p>Запускайте установленный Codex CLI в локальной папке проекта или подключайтесь к VDS через свой OpenSSH alias.</p>
       </div>
