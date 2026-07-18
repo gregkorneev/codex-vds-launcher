@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-// Developer Beta 9 integration checks.
+// Stable version 1 integration checks.
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
@@ -9,11 +9,15 @@ const { buildSessionHistoryMarkdown, sessionHistoryFileName } = require('../src/
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('Developer Beta 9 branding and release version stay aligned', () => {
+test('stable version 1 branding and release metadata stay aligned', () => {
   const packageJson = JSON.parse(read('package.json'));
-  assert.equal(packageJson.version, '1.0.0-beta.9');
-  assert.equal(packageJson.releaseName, 'Codex CLI Launcher Developer Beta 9');
-  assert.match(packageJson.build.artifactName, /^Codex-CLI-Launcher-Beta-/);
+  assert.equal(packageJson.version, '1.0.0');
+  assert.equal(packageJson.releaseName, 'Codex CLI Launcher v1');
+  assert.equal(packageJson.build.productName, 'Codex CLI Launcher');
+  assert.equal(packageJson.build.publish.channel, 'latest');
+  assert.equal(packageJson.build.publish.releaseType, 'release');
+  assert.match(packageJson.build.artifactName, /^Codex-CLI-Launcher-\$\{version\}/);
+  assert.doesNotMatch(packageJson.build.artifactName, /Beta/);
 });
 
 test('terminal resizing, account profile, and session export are wired', () => {
@@ -28,11 +32,21 @@ test('terminal resizing, account profile, and session export are wired', () => {
   assert.match(main, /account\/rateLimits\/read/);
   assert.match(renderer, /new ResizeObserver\(scheduleFit\)/);
   assert.match(renderer, /accountProfile\.scrollIntoView/);
-  assert.match(renderer, /Что изменилось в Developer Beta 9/);
-  assert.match(renderer, /What changed in Developer Beta 9/);
+  assert.match(renderer, /Что входит в Codex CLI Launcher v1/);
+  assert.match(renderer, /What's included in Codex CLI Launcher v1/);
   assert.match(renderer, /exportSessionHistory/);
   assert.match(main, /history:exportSession/);
   assert.match(main, /tray-icon\.png/);
+});
+
+test('stable release notes and README cover Beta 1 through Beta 9', () => {
+  const notes = read('docs/releases/v1.0.0.md');
+  const readme = read('README.md');
+  for (let beta = 1; beta <= 9; beta += 1) {
+    assert.match(notes, new RegExp(`Beta ${beta}`));
+  }
+  assert.match(readme, /first stable release is .*v1\.0\.0/);
+  assert.match(readme, /Первый стабильный релиз .*v1\.0\.0/);
 });
 
 test('session export produces readable Markdown without terminal control sequences', () => {

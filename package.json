@@ -1,10 +1,10 @@
 {
   "name": "codex-cli-launcher",
-  "version": "1.0.0-beta.9",
+  "version": "1.0.0",
   "description": "Desktop launcher for running Codex CLI locally or on a VDS over SSH",
-  "desktopName": "Codex CLI Launcher Beta",
-  "displayVersion": "Developer Beta 9 (1.0.0-beta.9)",
-  "releaseName": "Codex CLI Launcher Developer Beta 9",
+  "desktopName": "Codex CLI Launcher",
+  "displayVersion": "Version 1 (1.0.0)",
+  "releaseName": "Codex CLI Launcher v1",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -22,8 +22,8 @@
   },
   "build": {
     "appId": "app.codex-vds.launcher",
-    "productName": "Codex CLI Launcher Beta",
-    "artifactName": "Codex-CLI-Launcher-Beta-${version}-${os}-${arch}.${ext}",
+    "productName": "Codex CLI Launcher",
+    "artifactName": "Codex-CLI-Launcher-${version}-${os}-${arch}.${ext}",
     "files": [
       "src/**/*",
       "docs/**/*",
@@ -63,8 +63,8 @@
       "provider": "github",
       "owner": "gregkorneev",
       "repo": "codex-vds-launcher",
-      "channel": "beta",
-      "releaseType": "prerelease"
+      "channel": "latest",
+      "releaseType": "release"
     }
   },
   "keywords": [
