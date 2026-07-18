@@ -1,4 +1,4 @@
-# Codex VDS Launcher
+# Codex CLI Launcher
 
 Desktop launcher for running Codex CLI locally or on your VDS over SSH.
 
@@ -6,35 +6,35 @@ Desktop launcher for running Codex CLI locally or on your VDS over SSH.
 
 ## English
 
-Codex VDS Launcher is an Electron app with an embedded xterm.js terminal. It can start an installed Codex CLI in a local project folder or run Codex on a remote server through a user-managed OpenSSH alias.
+Codex CLI Launcher is an Electron app with an embedded xterm.js terminal. It can start an installed Codex CLI in a local project folder or run Codex on a remote server through a user-managed OpenSSH alias.
 
 ### Status
 
-Developer beta. Current build: **Codex VDS Launcher Developer Beta 5**.
+Developer beta. Current build: **Codex CLI Launcher Developer Beta 6**.
 
 ### Features
 
 - Embedded xterm.js terminal backed by `node-pty`.
 - Local Codex CLI sessions with a native project-folder picker.
+- Explicit Settings switch between local mode and VDS over SSH; VDS-only UI is hidden in local mode.
 - Custom local and VDS projects from the `＋` button, stored separately in `user-projects.json`.
 - Isolated Web/PWA project storage at `profiles/<profile>/projects.json`.
 - User-configured SSH alias, Codex command, and remote project list.
 - UI language switcher: Russian and English.
-- First-launch onboarding and a reusable VDS connection guide with Codex CLI installation steps.
-- Expandable Customization panel with language, light/dark theme, and accent color selection.
+- First-launch and post-update welcome screen with a bilingual “What changed” summary.
+- Expandable Settings panel with working mode, language, light/dark theme, and accent color selection.
 - Safe launch command shape: `ssh -tt -o BatchMode=yes -o ConnectTimeout=15 <alias> "cd <path> && <codexCommand>"`.
 - Local `config.json` in Electron user data.
-- Quick prompts editable in the app and stored in `config.json`.
-- Local quick command sets saved in app settings.
+- Quick prompts and command sets combined into collapsible Quick actions.
 - Managed `AGENTS.md` sync with a neutral app marker.
 - Local Markdown instruction import by picker or drag-and-drop.
 - Local terminal history per `project.id`.
 - Tray menu.
-- Persistent collapsible Projects, Sessions, Appearance, and Server Status sections.
+- Persistent collapsible Projects, Sessions, Settings, Server Status, Updates, Local MD, and Quick actions sections with visible arrow indicators.
 - Compact read-only VDS/SSH/Codex/VPN status cards; the separate Diagnostics UI was removed.
 
-Beta artifacts are named **Codex VDS Launcher Beta**. Stable release artifacts
-should be named **Codex VDS Launcher**.
+Beta artifacts are named **Codex CLI Launcher Beta**. Stable release artifacts
+should be named **Codex CLI Launcher**.
 
 ### Requirements
 
@@ -147,7 +147,7 @@ This project was initially extracted and generalized from KORNIX Codex Launcher.
 
 ### OpenAI / Codex Disclaimer
 
-Codex VDS Launcher is not affiliated with, endorsed by, or sponsored by OpenAI. Codex is a product and/or trademark of OpenAI.
+Codex CLI Launcher is not affiliated with, endorsed by, or sponsored by OpenAI. Codex is a product and/or trademark of OpenAI.
 
 ### License Audit
 
@@ -176,37 +176,41 @@ npm run publish:release
 
 Beta builds use the `beta` update channel and stable builds use `latest`. Ad-hoc macOS packages open the exact official prerelease page for manual DMG installation; Windows and trusted macOS packages retain automatic installation.
 
+### Release checklist
+
+Every release must update `RELEASE_CHANGES` in `src/renderer/app.js`. The launcher records the installed version and automatically shows this bilingual change summary on the first launch after an update.
+
 ## Русский
 
-Codex VDS Launcher — Electron-приложение со встроенным терминалом xterm.js. Оно запускает установленный Codex CLI в локальной папке проекта или на удалённом сервере через пользовательский OpenSSH alias.
+Codex CLI Launcher — Electron-приложение со встроенным терминалом xterm.js. Оно запускает установленный Codex CLI в локальной папке проекта или на удалённом сервере через пользовательский OpenSSH alias.
 
 ### Статус
 
-Developer beta. Текущая сборка: **Codex VDS Launcher Developer Beta 5**.
+Developer beta. Текущая сборка: **Codex CLI Launcher Developer Beta 6**.
 
 ### Возможности
 
 - Встроенный терминал xterm.js на `node-pty`.
 - Локальные Codex CLI-сессии с нативным выбором папки проекта.
+- Явный переключатель в «Настройках» между локальным режимом и VDS через SSH; в локальном режиме VDS-разделы скрыты.
 - Пользовательские локальные и VDS-проекты через кнопку `＋`, отдельно сохранённые в `user-projects.json`.
 - Изолированное хранилище проектов Web/PWA в `profiles/<profile>/projects.json`.
 - Пользовательский SSH alias, команда Codex и список удалённых проектов.
 - Переключение языка интерфейса: русский и английский.
-- Приветственный экран первого запуска и повторно доступная инструкция подключения к VDS с шагами установки Codex CLI.
-- Раскрываемая вкладка кастомизации с языком, светлой/тёмной темой и выбором акцентного цвета.
+- Приветственный экран первого запуска и после каждого обновления с двуязычным списком изменений.
+- Раскрываемая вкладка «Настройки» с режимом работы, языком, светлой/тёмной темой и выбором акцентного цвета.
 - Безопасная форма запуска: `ssh -tt -o BatchMode=yes -o ConnectTimeout=15 <alias> "cd <path> && <codexCommand>"`.
 - Локальный `config.json` в Electron user data.
-- Быстрые промпты редактируются в приложении и сохраняются в `config.json`.
-- Локальные быстрые команды в настройках приложения.
+- Быстрые промпты и команды объединены в сворачиваемые «Быстрые действия».
 - Синхронизация управляемого `AGENTS.md` с нейтральным маркером приложения.
 - Импорт локальных Markdown-инструкций через выбор файла или drag-and-drop.
 - Локальная история терминала по `project.id`.
 - Меню в системном трее.
-- Сворачиваемые разделы «Проекты», «Сессии», «Оформление» и «Статус сервера» с сохранением состояния.
+- Сворачиваемые разделы «Проекты», «Сессии», «Настройки», «Статус сервера», «Обновления», «Локальные MD» и «Быстрые действия» со стрелками и сохранением состояния.
 - Компактные read-only карточки VDS/SSH/Codex/VPN; отдельный интерфейс «Диагностика» удалён.
 
-Beta-артефакты называются **Codex VDS Launcher Beta**. Стабильные release-артефакты
-должны называться **Codex VDS Launcher**.
+Beta-артефакты называются **Codex CLI Launcher Beta**. Стабильные release-артефакты
+должны называться **Codex CLI Launcher**.
 
 ### Требования
 
@@ -318,7 +322,7 @@ ssh my-vds
 
 ### OpenAI / Codex disclaimer
 
-Codex VDS Launcher не аффилирован, не одобрен и не спонсируется OpenAI. Codex является продуктом и/или товарным знаком OpenAI.
+Codex CLI Launcher не аффилирован, не одобрен и не спонсируется OpenAI. Codex является продуктом и/или товарным знаком OpenAI.
 
 ### Аудит лицензий
 
@@ -346,3 +350,7 @@ npm run publish:release
 ```
 
 Beta-сборки используют канал `beta`, стабильные — `latest`. Ad-hoc macOS-сборка открывает страницу конкретного официального prerelease для ручной установки DMG; Windows и macOS со доверенной подписью сохраняют автоматическую установку.
+
+### Чек-лист релиза
+
+В каждом релизе нужно обновлять `RELEASE_CHANGES` в `src/renderer/app.js`. Лаунчер запоминает установленную версию и автоматически показывает этот двуязычный список изменений при первом запуске после обновления.

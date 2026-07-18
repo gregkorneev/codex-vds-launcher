@@ -4,7 +4,7 @@
 
 ## English
 
-Codex VDS Launcher is currently intended for local macOS/Windows development and manual testing from source.
+Codex CLI Launcher is currently intended for local macOS/Windows development and manual testing from source.
 
 ### Install And Run From Source
 
@@ -133,7 +133,7 @@ A local project starts the `codex` executable found in `PATH` with the selected 
 If AGENTS sync is enabled, the app updates `AGENTS.md` before starting Codex. It will not overwrite an existing file unless it contains:
 
 ```html
-<!-- Managed by Codex VDS Launcher -->
+<!-- Managed by Codex CLI Launcher -->
 ```
 
 ### Quick Prompts
@@ -160,7 +160,7 @@ Compact status cards run read-only VDS, SSH, Codex, and VPN checks. The separate
 
 ## Русский
 
-Codex VDS Launcher сейчас рассчитан на локальную разработку под macOS/Windows и ручное тестирование из исходников.
+Codex CLI Launcher сейчас рассчитан на локальную разработку под macOS/Windows и ручное тестирование из исходников.
 
 ### Установка и запуск из исходников
 
@@ -289,7 +289,7 @@ ssh -tt -o BatchMode=yes -o ConnectTimeout=15 my-vds "cd /opt/app && codex"
 Если синхронизация AGENTS включена, приложение обновляет `AGENTS.md` перед запуском Codex. Существующий файл не будет перезаписан, если в нём нет маркера:
 
 ```html
-<!-- Managed by Codex VDS Launcher -->
+<!-- Managed by Codex CLI Launcher -->
 ```
 
 ### Быстрые промпты

@@ -19,13 +19,13 @@ const {
   releaseUrlForVersion
 } = require('./shared/update-policy');
 
-const APP_NAME = 'Codex VDS Launcher';
-const BETA_APP_NAME = 'Codex VDS Launcher Beta';
+const APP_NAME = 'Codex CLI Launcher';
+const BETA_APP_NAME = 'Codex CLI Launcher Beta';
 const APP_VERSION = packageJson.version;
 const IS_BETA_BUILD = /(?:^|-)beta(?:\.|$)/i.test(APP_VERSION);
 const APP_DISPLAY_NAME = IS_BETA_BUILD ? (packageJson.desktopName || BETA_APP_NAME) : APP_NAME;
 const UPDATE_CHANNEL = getUpdateChannel(APP_VERSION);
-const RELEASE_NAME = packageJson.releaseName || 'Codex VDS Launcher Developer Beta 5';
+const RELEASE_NAME = packageJson.releaseName || 'Codex CLI Launcher Developer Beta 6';
 const DISPLAY_VERSION = packageJson.displayVersion || packageJson.version;
 const SSH_CONNECT_TIMEOUT_SECONDS = 15;
 const DIAGNOSTIC_TIMEOUT_MS = 30000;
@@ -38,7 +38,8 @@ const HISTORY_FILE_NAME = 'codex-history.json';
 const SETTINGS_FILE_NAME = 'codex-settings.json';
 const LAUNCH_STATE_FILE_NAME = 'launch-state.json';
 const USER_PROJECTS_FILE_NAME = 'user-projects.json';
-const MANAGED_AGENT_MARKER = '<!-- Managed by Codex VDS Launcher -->';
+const MANAGED_AGENT_MARKER = '<!-- Managed by Codex CLI Launcher -->';
+const LEGACY_MANAGED_AGENT_MARKER = '<!-- Managed by Codex VDS Launcher -->';
 const MAX_MARKDOWN_INSTRUCTION_BYTES = 256 * 1024;
 const ALLOWED_CODEX_COMMANDS = new Set(['codex', 'codex-vpn']);
 const GITHUB_OWNER = 'gregkorneev';
@@ -99,7 +100,7 @@ const DEFAULT_QUICK_COMMAND_SETS = [
 ];
 
 const DEFAULT_AGENT_INSTRUCTIONS = [
-  '# Codex VDS Launcher',
+  '# Codex CLI Launcher',
   '',
   '- Answer concisely and stay focused on the requested task.',
   '- Explain the plan before risky changes.',
@@ -473,7 +474,10 @@ function normalizeSectionSettings(value = {}) {
     projects: value.projects !== false,
     sessions: value.sessions !== false,
     appearance: value.appearance !== false,
-    status: value.status !== false
+    status: value.status !== false,
+    updates: value.updates !== false,
+    localMd: value.localMd !== false,
+    quickActions: value.quickActions !== false
   };
 }
 
@@ -489,8 +493,9 @@ function normalizeSettings(value = {}) {
   const accentColor = allowedAccentColors.has(value.accentColor) ? value.accentColor : 'blue';
 
   return {
-    version: 6,
+    version: 7,
     updatedAt: typeof value.updatedAt === 'string' ? value.updatedAt : null,
+    launcherMode: value.launcherMode === 'local' ? 'local' : 'vds',
     language,
     theme,
     accentColor,
@@ -1036,7 +1041,8 @@ function buildTargetLaunchCommand(project, settings = loadSettings()) {
     commands.push(
       'agent_file=AGENTS.md',
       `agent_marker=${quoteForPosixShell(MANAGED_AGENT_MARKER)}`,
-      'if [ -f "$agent_file" ] && ! grep -Fqx "$agent_marker" "$agent_file"; then',
+      `legacy_agent_marker=${quoteForPosixShell(LEGACY_MANAGED_AGENT_MARKER)}`,
+      'if [ -f "$agent_file" ] && ! grep -Fqx "$agent_marker" "$agent_file" && ! grep -Fqx "$legacy_agent_marker" "$agent_file"; then',
       `  echo "[${APP_NAME}] AGENTS.md was not changed: existing file is not managed by this app."`,
       'else',
       '  umask 077',
@@ -1057,7 +1063,8 @@ function syncLocalAgentFile(project, settings) {
   try {
     if (fs.existsSync(agentPath)) {
       const current = fs.readFileSync(agentPath, 'utf8');
-      if (!current.split(/\r?\n/).includes(MANAGED_AGENT_MARKER)) {
+      const lines = current.split(/\r?\n/);
+      if (!lines.includes(MANAGED_AGENT_MARKER) && !lines.includes(LEGACY_MANAGED_AGENT_MARKER)) {
         return { ok: true, warning: 'AGENTS.md was not changed because it is not managed by this app.' };
       }
     }
@@ -1499,7 +1506,7 @@ function configureAboutPanel() {
     applicationName: APP_DISPLAY_NAME,
     applicationVersion: DISPLAY_VERSION,
     version: DISPLAY_VERSION,
-    copyright: 'Copyright © 2026 Codex VDS Launcher contributors',
+    copyright: 'Copyright © 2026 Codex CLI Launcher contributors',
     iconPath: APP_ICON_PATH
   });
 }

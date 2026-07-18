@@ -46,7 +46,7 @@ jobs:
           test -n "$(find dist -maxdepth 1 -name '*.dmg' -print -quit)"
           test -n "$(find dist -maxdepth 1 -name '*.zip' -print -quit)"
           test -f dist/beta-mac.yml
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.5$' dist/beta-mac.yml
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.6$' dist/beta-mac.yml
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -87,7 +87,7 @@ jobs:
         run: |
           test -n "$(find dist -maxdepth 1 -name '*win-x64.exe' -print -quit)"
           test -f dist/beta.yml
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.5$' dist/beta.yml
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.6$' dist/beta.yml
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -115,34 +115,34 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_TITLE: Codex VDS Launcher Developer Beta 5
+          RELEASE_TITLE: Codex CLI Launcher Developer Beta 6
         run: |
           cat > release-notes.md <<'EOF'
           ## Русский
 
-          Developer Beta 5 добавляет два полноценных режима работы: Codex CLI на VDS через SSH и локальный Codex CLI, установленный на компьютере.
+          Codex VDS Launcher теперь называется **Codex CLI Launcher**. Developer Beta 6 делает два режима работы явными и упрощает навигацию.
 
           Главное:
-          - Кнопка `＋` добавляет пользовательские проекты; VDS-папки выбираются только из проверенного списка внутри `projectsRoot`, локальные — через нативный выбор каталога.
-          - Пользовательские проекты сохраняются отдельно в `user-projects.json`; для Web/PWA поддерживается изолированный `profiles/<user>/projects.json`.
-          - Проекты и одноимённые сессии строятся динамически. Разделы «Проекты», «Сессии», «Оформление» и «Статус сервера» сворачиваются и запоминают состояние.
-          - Раздел и нативное меню «Диагностика» удалены; быстрые карточки состояния VDS, SSH, Codex и VPN сохранены.
-          - Ad-hoc macOS-сборка больше не запускает несовместимый ShipIt: кнопка `Скачать v… (.dmg)` открывает только страницу конкретного prerelease официального репозитория.
-          - Windows и будущие macOS-сборки с доверенной подписью сохраняют автоматическую загрузку и установку.
-          - Beta-канал публикует `.dmg`, `.zip`, `.exe`, `beta-mac.yml` и `beta.yml`; Linux и `.blockmap` исключены.
-
-          Важно: переход со старых Beta на Beta 5 нужно один раз выполнить вручную через `.dmg`, потому что старые сборки ещё используют ShipIt.
+          - В «Настройках» появился переключатель «На этом компьютере / На VDS через SSH».
+          - В локальном режиме показываются только локальные проекты; конфигурация VDS и карточки статуса сервера скрыты.
+          - При добавлении проекта выбор папки автоматически соответствует текущему режиму.
+          - Быстрые промпты и команды объединены в один сворачиваемый раздел «Быстрые действия».
+          - «Проекты», «Обновления», «Локальные MD» и «Быстрые действия» сворачиваются, показывают стрелку и запоминают состояние.
+          - Приветственный экран объясняет оба режима и показывает изменения текущей версии после каждого обновления.
+          - Артефакты и интерфейс используют новое название Codex CLI Launcher.
 
           ## English
 
-          Developer Beta 5 adds two complete launch modes: Codex CLI on a VDS over SSH and a locally installed Codex CLI.
+          Codex VDS Launcher is now **Codex CLI Launcher**. Developer Beta 6 makes both working modes explicit and simplifies navigation.
 
           Highlights:
-          - Add custom VDS or local projects with validated folder selection and separate JSON persistence.
-          - Dynamic project/session lists and persistent collapsible sections.
-          - Diagnostics UI removed while compact VDS status cards remain.
-          - Safe manual DMG updates for ad-hoc macOS builds; automatic updates remain for Windows and trusted macOS signing.
-          - Beta metadata and production artifacts are published for macOS and Windows only.
+          - A new Settings switch selects “On this computer” or “On a VDS over SSH”.
+          - Local mode shows only local projects and hides VDS configuration and server-status cards.
+          - Adding a project automatically uses the folder picker for the selected mode.
+          - Quick prompts and commands are combined into one collapsible Quick actions section.
+          - Projects, Updates, Local MD, and Quick actions are collapsible, show an arrow, and remember their state.
+          - The welcome screen explains both modes and shows the current version changes after every update.
+          - Artifacts and the interface now use the Codex CLI Launcher name.
 
           This is a prerelease. The macOS app is ad-hoc signed and is not notarized.
           EOF
@@ -173,8 +173,8 @@ jobs:
 
           metadata_dir="$(mktemp -d)"
           gh release download "$RELEASE_TAG" -p beta-mac.yml -p beta.yml -D "$metadata_dir"
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.5$' "$metadata_dir/beta-mac.yml"
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.5$' "$metadata_dir/beta.yml"
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.6$' "$metadata_dir/beta-mac.yml"
+          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.6$' "$metadata_dir/beta.yml"
 
           latest_stable="$(gh api "repos/$GH_REPO/releases/latest" --jq .tag_name 2>/dev/null || true)"
           test "$latest_stable" != "$RELEASE_TAG"

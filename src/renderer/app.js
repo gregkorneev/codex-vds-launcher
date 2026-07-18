@@ -1,5 +1,22 @@
-const DISPLAY_VERSION = '1 - beta 5 (1 - beta 5)';
-const RELEASE_NAME = 'Codex VDS Launcher Developer Beta 5';
+const DISPLAY_VERSION = 'Developer Beta 6 (1.0.0-beta.6)';
+const RELEASE_NAME = 'Codex CLI Launcher Developer Beta 6';
+
+const RELEASE_CHANGES = {
+  ru: [
+    'Новое название продукта: Codex CLI Launcher.',
+    'Явный переключатель между локальным режимом и VDS через SSH.',
+    'VDS-разделы скрываются в локальном режиме.',
+    'Промпты и команды объединены в сворачиваемые «Быстрые действия».',
+    'Проекты, обновления, локальные MD и быстрые действия теперь сворачиваются.'
+  ],
+  en: [
+    'The product is now named Codex CLI Launcher.',
+    'A clear switch between local mode and VDS over SSH.',
+    'VDS-only sections are hidden in local mode.',
+    'Prompts and commands are combined into collapsible Quick actions.',
+    'Projects, updates, local MD, and quick actions are now collapsible.'
+  ]
+};
 
 const STATUS_CHECKS = [
   {
@@ -43,7 +60,7 @@ const DEFAULT_QUICK_COMMAND_SETS = [
 ];
 
 const DEFAULT_AGENT_INSTRUCTIONS = [
-  '# Codex VDS Launcher',
+  '# Codex CLI Launcher',
   '',
   '- Answer concisely and stay focused on the requested task.',
   '- Explain the plan before risky changes.',
@@ -54,8 +71,8 @@ const DEFAULT_AGENT_INSTRUCTIONS = [
 
 const TRANSLATIONS = {
   ru: {
-    navLabel: 'Навигация Codex VDS Launcher',
-    brandSubtitle: 'SSH-лаунчер для Codex CLI',
+    navLabel: 'Навигация Codex CLI Launcher',
+    brandSubtitle: 'Codex CLI локально и на VDS',
     projects: 'Проекты',
     sessions: 'Сессии',
     addProject: 'Добавить проект',
@@ -78,6 +95,11 @@ const TRANSLATIONS = {
     openSetupGuide: 'Инструкция подключения',
     language: 'Язык',
     appearance: 'Оформление',
+    settings: 'Настройки',
+    launcherMode: 'Режим работы',
+    modeLocal: 'На этом компьютере',
+    modeVds: 'На VDS через SSH',
+    launcherModeHelp: 'Переключение меняет список проектов и скрывает ненужные VDS-разделы.',
     customization: 'Кастомизация',
     theme: 'Тема',
     themeDark: 'Тёмная',
@@ -109,13 +131,15 @@ const TRANSLATIONS = {
     clearTerminal: 'Очистить терминал',
     openExternal: 'Открыть внешний терминал',
     embeddedTerminal: 'Встроенный терминал Codex',
-    rightPanelLabel: 'Статусы и быстрые промпты',
+    rightPanelLabel: 'Обновления, Markdown и быстрые действия',
     serverStatus: 'Статус сервера',
     localMd: 'Локальные MD',
     runMarkdown: 'Выполнить Markdown',
     dropMarkdown: 'Перетащите .md сюда',
-    quickPrompts: 'Быстрые промпты',
-    quickCommands: 'Быстрые команды',
+    quickActions: 'Быстрые действия',
+    quickPrompts: 'Промпты',
+    quickCommands: 'Команды',
+    noProjects: 'В этом режиме пока нет проектов. Добавьте первый проект кнопкой ＋.',
     editPromptsInConfig: 'Редактировать быстрые промпты в config.json',
     addQuickPrompt: 'Добавить быстрый промпт',
     addCommandSet: 'Добавить набор команд',
@@ -188,8 +212,8 @@ const TRANSLATIONS = {
     localMarkdownNoFs: 'Удалённый сервер не имеет доступа к локальной файловой системе. Используй только содержимое ниже.'
   },
   en: {
-    navLabel: 'Codex VDS Launcher navigation',
-    brandSubtitle: 'SSH launcher for Codex CLI',
+    navLabel: 'Codex CLI Launcher navigation',
+    brandSubtitle: 'Codex CLI locally and on a VDS',
     projects: 'Projects',
     sessions: 'Sessions',
     addProject: 'Add project',
@@ -212,6 +236,11 @@ const TRANSLATIONS = {
     openSetupGuide: 'Connection guide',
     language: 'Language',
     appearance: 'Appearance',
+    settings: 'Settings',
+    launcherMode: 'Working mode',
+    modeLocal: 'On this computer',
+    modeVds: 'On a VDS over SSH',
+    launcherModeHelp: 'Switching changes the project list and hides VDS-only sections.',
     customization: 'Customization',
     theme: 'Theme',
     themeDark: 'Dark',
@@ -243,13 +272,15 @@ const TRANSLATIONS = {
     clearTerminal: 'Clear terminal',
     openExternal: 'Open external terminal',
     embeddedTerminal: 'Embedded Codex terminal',
-    rightPanelLabel: 'Status and quick prompts',
+    rightPanelLabel: 'Updates, Markdown, and quick actions',
     serverStatus: 'Server status',
     localMd: 'Local MD',
     runMarkdown: 'Run Markdown',
     dropMarkdown: 'Drop .md here',
-    quickPrompts: 'Quick prompts',
-    quickCommands: 'Quick commands',
+    quickActions: 'Quick actions',
+    quickPrompts: 'Prompts',
+    quickCommands: 'Commands',
+    noProjects: 'There are no projects in this mode yet. Add one with the ＋ button.',
     editPromptsInConfig: 'Edit quick prompts in config.json',
     addQuickPrompt: 'Add quick prompt',
     addCommandSet: 'Add command set',
@@ -348,6 +379,7 @@ const restartSessionButton = document.querySelector('#restartSession');
 const clearTerminalButton = document.querySelector('#clearTerminal');
 const openExternalButton = document.querySelector('#openExternal');
 const clearHistoryButton = document.querySelector('#clearHistory');
+const launcherModeSelect = document.querySelector('#launcherMode');
 const languageSelect = document.querySelector('#languageSelect');
 const themeSelect = document.querySelector('#themeSelect');
 const accentPicker = document.querySelector('#accentPicker');
@@ -438,6 +470,7 @@ let currentUpdateState = { status: 'idle' };
 let selectedLocalProjectPath = '';
 
 let currentSettings = {
+  launcherMode: 'vds',
   language: 'ru',
   theme: 'dark',
   accentColor: 'blue',
@@ -449,7 +482,10 @@ let currentSettings = {
     projects: true,
     sessions: true,
     appearance: true,
-    status: true
+    status: true,
+    updates: true,
+    localMd: true,
+    quickActions: true
   },
   onboardingSeen: false,
   syncAgentInstructions: true,
@@ -510,6 +546,7 @@ function applyI18n() {
 
   updatePanelToggle(toggleLeftPanelButton, 'left', currentSettings.panels.left);
   updatePanelToggle(toggleRightPanelButton, 'right', currentSettings.panels.right);
+  renderProjectList();
   renderConfigSummary();
   renderStatusCards();
   renderQuickLists();
@@ -518,7 +555,9 @@ function applyI18n() {
 }
 
 function getProjects() {
-  return Array.isArray(appConfig.projects) ? appConfig.projects : [];
+  const projects = Array.isArray(appConfig.projects) ? appConfig.projects : [];
+  const location = currentSettings.launcherMode === 'local' ? 'local' : 'remote';
+  return projects.filter((project) => project.location === location);
 }
 
 function getProject(projectId) {
@@ -547,8 +586,8 @@ function syncProjectState() {
   getProjects().forEach((project) => ensureProjectState(project.id));
 
   if (!getProject(activeProjectId)) {
-    activeProjectId = getProjects()[0]?.id || 'root';
-    ensureProjectState(activeProjectId);
+    activeProjectId = getProjects()[0]?.id || '';
+    if (activeProjectId) ensureProjectState(activeProjectId);
   }
 }
 
@@ -604,8 +643,15 @@ function normalizeSectionSettings(value = {}) {
     projects: value.projects !== false,
     sessions: value.sessions !== false,
     appearance: value.appearance !== false,
-    status: value.status !== false
+    status: value.status !== false,
+    updates: value.updates !== false,
+    localMd: value.localMd !== false,
+    quickActions: value.quickActions !== false
   };
+}
+
+function normalizeLauncherMode(value) {
+  return value === 'local' ? 'local' : 'vds';
 }
 
 function normalizeLanguage(value) {
@@ -675,6 +721,7 @@ function applySectionVisibility() {
 
 function applySettings(settings) {
   currentSettings = {
+    launcherMode: normalizeLauncherMode(settings.launcherMode),
     language: normalizeLanguage(settings.language),
     theme: settings.theme === 'light' ? 'light' : 'dark',
     accentColor: normalizeAccentColor(settings.accentColor),
@@ -687,10 +734,12 @@ function applySettings(settings) {
   };
 
   document.body.dataset.theme = currentSettings.theme;
+  document.body.dataset.launcherMode = currentSettings.launcherMode;
   document.title = RELEASE_NAME;
   document.body.dataset.accent = currentSettings.accentColor;
   terminal.options.theme = buildTerminalTheme(currentSettings);
   appVersionLabel.textContent = DISPLAY_VERSION;
+  launcherModeSelect.value = currentSettings.launcherMode;
   languageSelect.value = currentSettings.language;
   themeSelect.value = currentSettings.theme;
   syncAgentInstructions.checked = currentSettings.syncAgentInstructions;
@@ -701,6 +750,7 @@ function applySettings(settings) {
   });
   applyPanelVisibility();
   applySectionVisibility();
+  syncProjectState();
   applyI18n();
 }
 
@@ -818,6 +868,13 @@ function writeLocal(projectId, text) {
 }
 
 function renderActiveBuffer() {
+  if (!activeProjectId) {
+    terminal.reset();
+    terminal.write(`${t('noProjects')}\r\n`);
+    fitAndResize();
+    return;
+  }
+
   ensureProjectState(activeProjectId);
   terminal.reset();
   terminal.write(buffersByProject[activeProjectId] || '');
@@ -836,6 +893,14 @@ function sessionStatus(projectId) {
 function renderProjectList() {
   projectList.innerHTML = '';
   sessionList.innerHTML = '';
+
+  if (getProjects().length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'config-help';
+    empty.textContent = t('noProjects');
+    projectList.appendChild(empty);
+    return;
+  }
 
   getProjects().forEach((project) => {
     ensureProjectState(project.id);
@@ -898,13 +963,18 @@ function updateProjectLocationFields() {
 async function openProjectDialog() {
   projectForm.reset();
   projectError.textContent = '';
-  projectLocation.value = 'remote';
+  projectLocation.value = currentSettings.launcherMode === 'local' ? 'local' : 'remote';
   selectedLocalProjectPath = '';
   projectLocalPath.textContent = '';
   projectRemoteFolder.replaceChildren(new Option(currentSettings.language === 'en' ? 'Loading folders…' : 'Загрузка папок…', ''));
   projectRemoteFolder.disabled = true;
   updateProjectLocationFields();
   if (!projectDialog.open) projectDialog.showModal();
+
+  if (projectLocation.value === 'local') {
+    selectLocalFolderButton.focus();
+    return;
+  }
 
   try {
     const result = await api.listRemoteProjectFolders();
@@ -940,7 +1010,7 @@ async function selectLocalProjectFolder() {
 
 async function saveProject(event) {
   event.preventDefault();
-  const local = projectLocation.value === 'local';
+  const local = currentSettings.launcherMode === 'local';
   const folder = local ? selectedLocalProjectPath : projectRemoteFolder.value;
   projectError.textContent = '';
 
@@ -1013,6 +1083,18 @@ function updateControls() {
   const hasSession = Boolean(currentSessionId());
 
   if (!activeProject) {
+    activeTitle.textContent = t('projects');
+    activePath.textContent = '—';
+    activeSshAlias.textContent = currentSettings.launcherMode === 'local' ? t('projectLocal') : t('modeVds');
+    activeCommand.textContent = 'codex';
+    footerProject.textContent = '—';
+    footerStatus.textContent = statusText('inactive');
+    footerCommand.textContent = 'codex';
+    startSessionButton.disabled = true;
+    stopSessionButton.disabled = true;
+    restartSessionButton.disabled = true;
+    clearTerminalButton.disabled = true;
+    openExternalButton.disabled = true;
     return;
   }
 
@@ -1030,6 +1112,7 @@ function updateControls() {
   stopSessionButton.disabled = !hasSession;
   restartSessionButton.disabled = false;
   clearTerminalButton.disabled = false;
+  openExternalButton.disabled = false;
 
   document.querySelectorAll('.project-row').forEach((row) => {
     const projectId = row.dataset.project;
@@ -1602,6 +1685,61 @@ function setupGuideMarkup({ welcome = false } = {}) {
   const alias = escapeHtml(appConfig.sshAlias || 'my-vds');
   const configFile = escapeHtml(appConfig.path || 'config.json');
 
+  if (welcome) {
+    const language = currentSettings.language === 'en' ? 'en' : 'ru';
+    const changes = RELEASE_CHANGES[language].map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+
+    if (language === 'en') {
+      return `
+        <section class="guide-hero">
+          <img src="./assets/app-icon.png" alt="">
+          <div>
+            <h3>Welcome to Codex CLI Launcher</h3>
+            <p class="guide-version-line"><strong>Version:</strong> ${escapeHtml(DISPLAY_VERSION)}</p>
+            <p>Choose one of two modes in Settings. You can switch at any time.</p>
+          </div>
+        </section>
+        <section class="guide-grid mode-grid">
+          <article><strong>On this computer</strong><span>Uses the Codex CLI installed locally. Add a project, choose its folder, and start the session.</span></article>
+          <article><strong>On a VDS over SSH</strong><span>Uses your OpenSSH alias and the Codex CLI installed on the server. VDS configuration and status are shown only in this mode.</span></article>
+        </section>
+        <section class="release-highlights">
+          <h3>What changed in Developer Beta 6</h3>
+          <ul>${changes}</ul>
+        </section>
+        <ol class="guide-steps">
+          <li><strong>Select the mode in Settings.</strong><span>Choose “On this computer” or “On a VDS over SSH”.</span></li>
+          <li><strong>Add a project with ＋.</strong><span>The folder picker follows the selected mode.</span></li>
+          <li><strong>Start Codex.</strong><span>Make sure <code>codex</code> is installed and you have signed in on the selected computer or VDS.</span></li>
+        </ol>
+      `;
+    }
+
+    return `
+      <section class="guide-hero">
+        <img src="./assets/app-icon.png" alt="">
+        <div>
+          <h3>Добро пожаловать в Codex CLI Launcher</h3>
+          <p class="guide-version-line"><strong>Версия:</strong> ${escapeHtml(DISPLAY_VERSION)}</p>
+          <p>Выберите один из двух режимов в «Настройках». Переключаться между ними можно в любое время.</p>
+        </div>
+      </section>
+      <section class="guide-grid mode-grid">
+        <article><strong>На этом компьютере</strong><span>Использует локально установленный Codex CLI. Добавьте проект, выберите его папку и запустите сессию.</span></article>
+        <article><strong>На VDS через SSH</strong><span>Использует ваш OpenSSH alias и Codex CLI на сервере. Конфигурация и статус VDS видны только в этом режиме.</span></article>
+      </section>
+      <section class="release-highlights">
+        <h3>Что изменилось в Developer Beta 6</h3>
+        <ul>${changes}</ul>
+      </section>
+      <ol class="guide-steps">
+        <li><strong>Выберите режим в «Настройках».</strong><span>«На этом компьютере» или «На VDS через SSH».</span></li>
+        <li><strong>Добавьте проект кнопкой ＋.</strong><span>Выбор папки будет соответствовать текущему режиму.</span></li>
+        <li><strong>Запустите Codex.</strong><span>Убедитесь, что команда <code>codex</code> установлена и авторизована на выбранном компьютере или VDS.</span></li>
+      </ol>
+    `;
+  }
+
   if (currentSettings.language === 'en') {
     return `
       <section class="guide-hero">
@@ -1680,8 +1818,8 @@ codex</pre></li>
 function openSetupGuide({ welcome = false } = {}) {
   setupGuideKicker.textContent = RELEASE_NAME;
   setupGuideTitle.textContent = currentSettings.language === 'en'
-    ? (welcome ? 'First launch guide' : 'VDS connection guide')
-    : (welcome ? 'Первый запуск' : 'Инструкция подключения к VDS');
+    ? (welcome ? 'Two modes and what is new' : 'VDS connection guide')
+    : (welcome ? 'Два режима и что нового' : 'Инструкция подключения к VDS');
   setupGuideContent.innerHTML = setupGuideMarkup({ welcome });
   setupGuideDialog.showModal();
 }
@@ -1815,6 +1953,16 @@ cancelProjectFooterButton.addEventListener('click', closeProjectDialog);
 projectDialog.addEventListener('cancel', () => {
   selectedLocalProjectPath = '';
   projectForm.reset();
+});
+launcherModeSelect.addEventListener('change', () => {
+  currentSettings = {
+    ...currentSettings,
+    launcherMode: normalizeLauncherMode(launcherModeSelect.value)
+  };
+  applySettings(currentSettings);
+  renderActiveBuffer();
+  if (currentSettings.launcherMode === 'vds') renderSshSetupStatus();
+  saveSettingsSoon();
 });
 languageSelect.addEventListener('change', () => {
   currentSettings = {
@@ -2007,7 +2155,7 @@ async function initialize() {
   }
   updateControls();
   renderActiveBuffer();
-  await renderSshSetupStatus();
+  if (currentSettings.launcherMode === 'vds') await renderSshSetupStatus();
   if (!currentSettings.onboardingSeen) {
     window.setTimeout(() => openSetupGuide({ welcome: true }), 180);
   }

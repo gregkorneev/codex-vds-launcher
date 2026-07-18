@@ -1,10 +1,10 @@
 {
-  "name": "codex-vds-launcher",
-  "version": "1.0.0-beta.5",
+  "name": "codex-cli-launcher",
+  "version": "1.0.0-beta.6",
   "description": "Desktop launcher for running Codex CLI locally or on a VDS over SSH",
-  "desktopName": "Codex VDS Launcher Beta",
-  "displayVersion": "1 - beta 5 (1 - beta 5)",
-  "releaseName": "Codex VDS Launcher Developer Beta 5",
+  "desktopName": "Codex CLI Launcher Beta",
+  "displayVersion": "Developer Beta 6 (1.0.0-beta.6)",
+  "releaseName": "Codex CLI Launcher Developer Beta 6",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -14,7 +14,7 @@
     "dist:mac": "electron-builder --mac dmg zip --publish never",
     "dist:win": "electron-builder --win nsis --x64 --publish never -c.npmRebuild=false",
     "publish:beta": "electron-builder --publish always -c.publish.channel=beta -c.publish.releaseType=prerelease",
-    "publish:release": "electron-builder --publish always -c.publish.channel=latest -c.publish.releaseType=release -c.productName=\"Codex VDS Launcher\" -c.artifactName=\"Codex-VDS-Launcher-${version}-${os}-${arch}.${ext}\"",
+    "publish:release": "electron-builder --publish always -c.publish.channel=latest -c.publish.releaseType=release -c.productName=\"Codex CLI Launcher\" -c.artifactName=\"Codex-CLI-Launcher-${version}-${os}-${arch}.${ext}\"",
     "check": "node --check src/main.js && node --check src/preload.js && node --check src/renderer/app.js && node --check src/shared/user-projects.js && node --check src/shared/update-policy.js && node --check src/web/project-store.js",
     "test": "node --test",
     "license:summary": "license-checker --summary",
@@ -22,8 +22,8 @@
   },
   "build": {
     "appId": "app.codex-vds.launcher",
-    "productName": "Codex VDS Launcher Beta",
-    "artifactName": "Codex-VDS-Launcher-Beta-${version}-${os}-${arch}.${ext}",
+    "productName": "Codex CLI Launcher Beta",
+    "artifactName": "Codex-CLI-Launcher-Beta-${version}-${os}-${arch}.${ext}",
     "files": [
       "src/**/*",
       "docs/**/*",
@@ -73,7 +73,7 @@
     "vds",
     "ssh"
   ],
-  "author": "Codex VDS Launcher contributors",
+  "author": "Codex CLI Launcher contributors",
   "license": "MIT",
   "devDependencies": {
     "@electron/rebuild": "^4.1.0",

@@ -4,7 +4,7 @@
 
 ## English
 
-Codex VDS Launcher is a local desktop wrapper around OpenSSH and Codex CLI. It is not a credential manager and does not provision server access.
+Codex CLI Launcher is a local desktop wrapper around OpenSSH and Codex CLI. It is not a credential manager and does not provision server access.
 
 ### Secrets
 
@@ -55,7 +55,7 @@ When enabled, the app syncs a managed `AGENTS.md` into the selected local or rem
 The managed marker is:
 
 ```html
-<!-- Managed by Codex VDS Launcher -->
+<!-- Managed by Codex CLI Launcher -->
 ```
 
 If a project already has an `AGENTS.md` without that marker, the app leaves it unchanged and prints a warning in the terminal.
@@ -74,7 +74,7 @@ The user is responsible for SSH config correctness, private key storage and perm
 
 ## Русский
 
-Codex VDS Launcher — локальная desktop-оболочка вокруг OpenSSH и Codex CLI. Это не менеджер секретов и не инструмент автоматической настройки серверного доступа.
+Codex CLI Launcher — локальная desktop-оболочка вокруг OpenSSH и Codex CLI. Это не менеджер секретов и не инструмент автоматической настройки серверного доступа.
 
 ### Секреты
 
@@ -125,7 +125,7 @@ SSH-команды строятся из валидированных значе
 Маркер управления:
 
 ```html
-<!-- Managed by Codex VDS Launcher -->
+<!-- Managed by Codex CLI Launcher -->
 ```
 
 Если в проекте уже есть `AGENTS.md` без этого маркера, приложение оставляет файл без изменений и печатает предупреждение в терминал.

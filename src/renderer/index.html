@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Codex VDS Launcher</title>
+    <title>Codex CLI Launcher</title>
     <link rel="stylesheet" href="../vendor/xterm/xterm.css">
     <link rel="stylesheet" href="./style.css">
   </head>
   <body>
     <main class="app-shell">
-      <aside class="sidebar" aria-label="Навигация Codex VDS Launcher" data-i18n-attr="aria-label:navLabel">
+      <aside class="sidebar" aria-label="Навигация Codex CLI Launcher" data-i18n-attr="aria-label:navLabel">
         <header class="brand">
           <img class="brand-mark" src="./assets/app-icon.png" alt="" aria-hidden="true">
           <div>
-            <h1>Codex VDS Launcher</h1>
-            <p data-i18n="brandSubtitle">SSH launcher for Codex CLI</p>
+            <h1>Codex CLI Launcher</h1>
+            <p data-i18n="brandSubtitle">Codex CLI локально и на VDS</p>
           </div>
         </header>
 
@@ -32,7 +32,7 @@
           <div class="session-list disclosure-content" id="sessionList"></div>
         </details>
 
-        <details class="sidebar-section disclosure-section" open>
+        <details class="sidebar-section disclosure-section" data-vds-only open>
           <summary data-i18n="vdsConfiguration">Конфигурация VDS</summary>
           <div class="settings-list disclosure-content">
             <p class="config-path" id="configPath"></p>
@@ -46,8 +46,15 @@
         </details>
 
         <details class="sidebar-section disclosure-section" data-section="appearance" open>
-          <summary data-i18n="appearance">Оформление</summary>
+          <summary data-i18n="settings">Настройки</summary>
           <div class="settings-list disclosure-content">
+            <label class="field-label" for="launcherMode" data-i18n="launcherMode">Режим работы</label>
+            <select class="select-control" id="launcherMode">
+              <option value="local" data-i18n="modeLocal">На этом компьютере</option>
+              <option value="vds" data-i18n="modeVds">На VDS через SSH</option>
+            </select>
+            <p class="config-help" data-i18n="launcherModeHelp">Переключение меняет список проектов и скрывает ненужные VDS-разделы.</p>
+
             <label class="field-label" for="languageSelect" data-i18n="language">Язык</label>
             <select class="select-control" id="languageSelect">
               <option value="ru">Русский</option>
@@ -111,49 +118,49 @@
         </div>
       </section>
 
-      <aside class="right-panel" aria-label="Статусы и быстрые промпты" data-i18n-attr="aria-label:rightPanelLabel">
-        <details class="panel-section disclosure-section panel-disclosure" data-section="status" open>
+      <aside class="right-panel" aria-label="Обновления, Markdown и быстрые действия" data-i18n-attr="aria-label:rightPanelLabel">
+        <details class="panel-section disclosure-section panel-disclosure" data-section="status" data-vds-only open>
           <summary data-i18n="serverStatus">Статус сервера</summary>
           <div class="status-list disclosure-content" id="statusCards"></div>
         </details>
 
-        <section class="panel-section">
-          <header class="panel-heading">
-            <h2 data-i18n="updates">Обновления</h2>
-          </header>
-          <div class="settings-list">
+        <details class="panel-section disclosure-section panel-disclosure" data-section="updates" open>
+          <summary data-i18n="updates">Обновления</summary>
+          <div class="settings-list disclosure-content">
             <button type="button" class="secondary-button full-width-button" id="checkUpdates" data-i18n="checkUpdates">Проверить обновления</button>
             <button type="button" class="primary-button full-width-button" id="updateApp" data-i18n="updateApp" hidden>Обновить приложение</button>
             <p class="update-status" id="updateStatus" data-i18n="updateIdle">Обновления не проверялись</p>
-            <p class="version-note"><span data-i18n="versionLabel">Версия</span> <strong id="appVersionLabel">1 - beta 5 (1 - beta 5)</strong></p>
+            <p class="version-note"><span data-i18n="versionLabel">Версия</span> <strong id="appVersionLabel">Developer Beta 6 (1.0.0-beta.6)</strong></p>
           </div>
-        </section>
+        </details>
 
-        <section class="panel-section">
-          <header class="panel-heading">
-            <h2 data-i18n="localMd">Локальные MD</h2>
-          </header>
-          <div class="markdown-actions">
+        <details class="panel-section disclosure-section panel-disclosure" data-section="localMd" open>
+          <summary data-i18n="localMd">Локальные MD</summary>
+          <div class="markdown-actions disclosure-content">
             <button type="button" class="diagnostic-button" id="runMarkdownFile" data-i18n="runMarkdown">Выполнить Markdown</button>
             <div class="markdown-drop-zone" id="markdownDropZone" data-i18n="dropMarkdown">Перетащите .md сюда</div>
           </div>
-        </section>
+        </details>
 
-        <section class="panel-section">
-          <header class="panel-heading">
-            <h2 data-i18n="quickPrompts">Быстрые промпты</h2>
-            <button type="button" class="mini-button add-button" id="addQuickPrompt" title="Добавить быстрый промпт" aria-label="Добавить быстрый промпт" data-i18n-attr="title:addQuickPrompt;aria-label:addQuickPrompt">＋</button>
-          </header>
-          <div class="prompt-list" id="quickPrompts"></div>
-        </section>
-
-        <section class="panel-section">
-          <header class="panel-heading">
-            <h2 data-i18n="quickCommands">Быстрые команды</h2>
-            <button type="button" class="mini-button add-button" id="addQuickCommandSet" title="Добавить набор команд" aria-label="Добавить набор команд" data-i18n-attr="title:addCommandSet;aria-label:addCommandSet">＋</button>
-          </header>
-          <div class="prompt-list" id="quickCommandSets"></div>
-        </section>
+        <details class="panel-section disclosure-section panel-disclosure" data-section="quickActions" open>
+          <summary data-i18n="quickActions">Быстрые действия</summary>
+          <div class="quick-actions disclosure-content">
+            <section class="quick-actions-group">
+              <header class="panel-heading">
+                <h2 data-i18n="quickPrompts">Промпты</h2>
+                <button type="button" class="mini-button add-button" id="addQuickPrompt" title="Добавить быстрый промпт" aria-label="Добавить быстрый промпт" data-i18n-attr="title:addQuickPrompt;aria-label:addQuickPrompt">＋</button>
+              </header>
+              <div class="prompt-list" id="quickPrompts"></div>
+            </section>
+            <section class="quick-actions-group">
+              <header class="panel-heading">
+                <h2 data-i18n="quickCommands">Команды</h2>
+                <button type="button" class="mini-button add-button" id="addQuickCommandSet" title="Добавить набор команд" aria-label="Добавить набор команд" data-i18n-attr="title:addCommandSet;aria-label:addCommandSet">＋</button>
+              </header>
+              <div class="prompt-list" id="quickCommandSets"></div>
+            </section>
+          </div>
+        </details>
       </aside>
     </main>
 
@@ -164,11 +171,13 @@
           <button type="button" class="mini-button" id="cancelProject" title="Закрыть" aria-label="Закрыть" data-i18n-attr="title:close;aria-label:close">×</button>
         </header>
 
-        <label class="field-label" for="projectLocation" data-i18n="projectLocation">Где запустить Codex</label>
-        <select class="select-control" id="projectLocation">
-          <option value="remote" data-i18n="projectRemote">На VDS</option>
-          <option value="local" data-i18n="projectLocal">На этом компьютере</option>
-        </select>
+        <div id="projectLocationControl">
+          <label class="field-label" for="projectLocation" data-i18n="projectLocation">Где запустить Codex</label>
+          <select class="select-control" id="projectLocation" disabled>
+            <option value="remote" data-i18n="projectRemote">На VDS</option>
+            <option value="local" data-i18n="projectLocal">На этом компьютере</option>
+          </select>
+        </div>
 
         <label class="field-label" for="projectName" data-i18n="projectName">Название проекта</label>
         <input class="text-control" id="projectName" maxlength="100" required>
@@ -232,7 +241,7 @@
       <form class="dialog-card guide-card" method="dialog">
         <header class="dialog-heading">
           <div>
-            <p class="dialog-kicker" id="setupGuideKicker">Codex VDS Launcher Developer Beta 5</p>
+            <p class="dialog-kicker" id="setupGuideKicker">Codex CLI Launcher Developer Beta 6</p>
             <h2 id="setupGuideTitle">Настройка подключения к VDS</h2>
           </div>
           <button type="button" class="mini-button" id="closeSetupGuide" title="Закрыть" aria-label="Закрыть" data-i18n-attr="title:close;aria-label:close">×</button>
@@ -241,15 +250,15 @@
         <div class="guide-content" id="setupGuideContent"></div>
 
         <footer class="dialog-actions">
-          <button type="button" class="secondary-button" id="copyGuideSshConfig" data-i18n="copySshConfig">Скопировать пример SSH config</button>
-          <button type="button" class="secondary-button" id="openGuideConfig" data-i18n="openConfig">Открыть config file</button>
+          <button type="button" class="secondary-button" id="copyGuideSshConfig" data-vds-only data-i18n="copySshConfig">Скопировать пример SSH config</button>
+          <button type="button" class="secondary-button" id="openGuideConfig" data-vds-only data-i18n="openConfig">Открыть config file</button>
           <button type="button" class="primary-button" id="finishSetupGuide" data-i18n="startUsing">Начать работу</button>
         </footer>
       </form>
     </dialog>
 
     <footer class="status-bar">
-      <span><span data-i18n="sshAlias">SSH alias</span>: <strong id="footerAlias">my-vds</strong></span>
+      <span data-vds-only><span data-i18n="sshAlias">SSH alias</span>: <strong id="footerAlias">my-vds</strong></span>
       <span><span data-i18n="activeProject">Активный проект</span>: <strong id="footerProject">Server root</strong></span>
       <span><span data-i18n="sessionStatus">Статус сессии</span>: <strong id="footerStatus">неактивна</strong></span>
       <span><span data-i18n="historyStatus">История</span>: <strong id="historyStatus">загрузка</strong></span>

@@ -2,7 +2,7 @@
 
 ## English
 
-Codex VDS Launcher uses your normal OpenSSH configuration. It does not create
+Codex CLI Launcher uses your normal OpenSSH configuration. It does not create
 server accounts, store passwords, or store private SSH keys.
 
 1. Install Codex CLI on the VDS.
@@ -71,7 +71,7 @@ server accounts, store passwords, or store private SSH keys.
 
 7. `codex-vpn` is optional and advanced.
 
-   It is not part of Codex CLI and is not installed by Codex VDS Launcher. Use
+   It is not part of Codex CLI and is not installed by Codex CLI Launcher. Use
    it only if you intentionally created a custom `codex-vpn` wrapper on your VDS
    and want the app to run that wrapper instead of plain `codex`.
 
@@ -80,7 +80,7 @@ server accounts, store passwords, or store private SSH keys.
 
 ## Русский
 
-Codex VDS Launcher использует обычную конфигурацию OpenSSH. Приложение не
+Codex CLI Launcher использует обычную конфигурацию OpenSSH. Приложение не
 создаёт учётки на сервере, не хранит пароли и не хранит приватные SSH-ключи.
 
 1. Установите Codex CLI на VDS.
@@ -149,7 +149,7 @@ Codex VDS Launcher использует обычную конфигурацию 
 
 7. `codex-vpn` — необязательный продвинутый вариант.
 
-   Это не часть Codex CLI, и Codex VDS Launcher его не устанавливает.
+   Это не часть Codex CLI, и Codex CLI Launcher его не устанавливает.
    Используйте `codex-vpn` только если вы осознанно создали такую пользовательскую
    обёртку на VDS и хотите запускать её вместо обычного `codex`.
 
