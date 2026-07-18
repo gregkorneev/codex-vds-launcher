@@ -10,7 +10,7 @@ Codex CLI Launcher is an Electron app with an embedded xterm.js terminal. It can
 
 ### Status
 
-Developer beta. Current build: **Codex CLI Launcher Developer Beta 8**.
+Developer beta. Current build: **Codex CLI Launcher Developer Beta 9**.
 
 ### Features
 
@@ -31,6 +31,7 @@ Developer beta. Current build: **Codex CLI Launcher Developer Beta 8**.
 - Managed `AGENTS.md` sync with a neutral app marker.
 - Local Markdown instruction import by picker or drag-and-drop.
 - Local terminal history per `project.id`.
+- Markdown export of the latest run for each session.
 - Tray menu.
 - Persistent collapsible Projects, Sessions, Settings, Server Status, Updates, Local MD, and Quick actions sections with visible arrow indicators.
 - Compact read-only VDS/SSH/Codex/VPN status cards; the separate Diagnostics UI was removed.
@@ -188,7 +189,7 @@ Codex CLI Launcher — Electron-приложение со встроенным �
 
 ### Статус
 
-Developer beta. Текущая сборка: **Codex CLI Launcher Developer Beta 8**.
+Developer beta. Текущая сборка: **Codex CLI Launcher Developer Beta 9**.
 
 ### Возможности
 
@@ -209,6 +210,7 @@ Developer beta. Текущая сборка: **Codex CLI Launcher Developer Beta
 - Синхронизация управляемого `AGENTS.md` с нейтральным маркером приложения.
 - Импорт локальных Markdown-инструкций через выбор файла или drag-and-drop.
 - Локальная история терминала по `project.id`.
+- Выгрузка последнего запуска каждой сессии в Markdown.
 - Меню в системном трее.
 - Сворачиваемые разделы «Проекты», «Сессии», «Настройки», «Статус сервера», «Обновления», «Локальные MD» и «Быстрые действия» со стрелками и сохранением состояния.
 - Компактные read-only карточки VDS/SSH/Codex/VPN; отдельный интерфейс «Диагностика» удалён.

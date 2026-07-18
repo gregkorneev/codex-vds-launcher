@@ -19,6 +19,7 @@ const {
   releaseUrlForVersion
 } = require('./shared/update-policy');
 const { normalizeCodexAccount } = require('./shared/codex-account');
+const { buildSessionHistoryMarkdown, sessionHistoryFileName } = require('./shared/session-history');
 
 const APP_NAME = 'Codex CLI Launcher';
 const BETA_APP_NAME = 'Codex CLI Launcher Beta';
@@ -26,7 +27,7 @@ const APP_VERSION = packageJson.version;
 const IS_BETA_BUILD = /(?:^|-)beta(?:\.|$)/i.test(APP_VERSION);
 const APP_DISPLAY_NAME = IS_BETA_BUILD ? (packageJson.desktopName || BETA_APP_NAME) : APP_NAME;
 const UPDATE_CHANNEL = getUpdateChannel(APP_VERSION);
-const RELEASE_NAME = packageJson.releaseName || 'Codex CLI Launcher Developer Beta 8';
+const RELEASE_NAME = packageJson.releaseName || 'Codex CLI Launcher Developer Beta 9';
 const DISPLAY_VERSION = packageJson.displayVersion || packageJson.version;
 const SSH_CONNECT_TIMEOUT_SECONDS = 15;
 const DIAGNOSTIC_TIMEOUT_MS = 30000;
@@ -442,7 +443,9 @@ function emptyBuffers() {
 
 function normalizeHistory(value = {}) {
   const buffers = emptyBuffers();
+  const runs = emptyBuffers();
   const sourceBuffers = value && typeof value.buffers === 'object' ? value.buffers : value;
+  const sourceRuns = value && typeof value.runs === 'object' ? value.runs : null;
 
   if (sourceBuffers && typeof sourceBuffers === 'object') {
     for (const [projectId, buffer] of Object.entries(sourceBuffers)) {
@@ -452,14 +455,26 @@ function normalizeHistory(value = {}) {
     }
   }
 
+  if (sourceRuns) {
+    for (const [projectId, run] of Object.entries(sourceRuns)) {
+      if (typeof run === 'string') {
+        runs[projectId] = run.slice(-500000);
+      }
+    }
+  } else {
+    // ponytail: v2 had no run boundaries; keep its buffer exportable until the next launch.
+    Object.assign(runs, buffers);
+  }
+
   const firstProjectId = getConfig().projects[0]?.id || 'root';
   const activeTargetId = getProject(value.activeTargetId) ? value.activeTargetId : firstProjectId;
 
   return {
-    version: 2,
+    version: 3,
     updatedAt: typeof value.updatedAt === 'string' ? value.updatedAt : null,
     activeTargetId,
-    buffers
+    buffers,
+    runs
   };
 }
 
@@ -532,6 +547,32 @@ function clearHistory() {
   });
   writeJsonFile(HISTORY_FILE_NAME, emptyHistory);
   return emptyHistory;
+}
+
+async function exportSessionHistory(event, projectId, transcript) {
+  const project = getProject(projectId);
+  if (!project) return { ok: false, error: `Unknown project: ${projectId}` };
+  if (typeof transcript !== 'string') return { ok: false, error: 'Session history must be a string.' };
+
+  const language = loadSettings().language;
+  const owner = BrowserWindow.fromWebContents(event.sender);
+  const options = {
+    title: language === 'en' ? 'Export session history' : 'Сгрузить историю сессии',
+    defaultPath: path.join(app.getPath('documents'), sessionHistoryFileName(project.name)),
+    filters: [{ name: 'Markdown', extensions: ['md'] }]
+  };
+  const result = owner
+    ? await dialog.showSaveDialog(owner, options)
+    : await dialog.showSaveDialog(options);
+  if (result.canceled || !result.filePath) return { ok: false, canceled: true };
+
+  const markdown = buildSessionHistoryMarkdown({
+    project,
+    transcript: transcript.slice(-500000),
+    language
+  });
+  await fs.promises.writeFile(result.filePath, markdown, 'utf8');
+  return { ok: true, path: result.filePath };
 }
 
 function loadSettings() {
@@ -1865,6 +1906,7 @@ function registerHandlers() {
 
   ipcMain.handle('history:load', () => loadHistory());
   ipcMain.handle('history:save', (_event, history) => saveHistory(history));
+  ipcMain.handle('history:exportSession', exportSessionHistory);
   ipcMain.handle('history:clear', () => {
     const history = clearHistory();
     sendToRenderer('history:cleared', history);

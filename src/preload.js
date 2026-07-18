@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('codexVdsLauncher', {
   writeClipboardText: (text) => clipboard.writeText(String(text || '')),
   loadHistory: () => ipcRenderer.invoke('history:load'),
   saveHistory: (history) => ipcRenderer.invoke('history:save', history),
+  exportSessionHistory: (projectId, transcript) => ipcRenderer.invoke('history:exportSession', projectId, transcript),
   clearHistory: () => ipcRenderer.invoke('history:clear'),
   loadSettings: () => ipcRenderer.invoke('settings:load'),
   saveSettings: (settings) => ipcRenderer.invoke('settings:save', settings),
