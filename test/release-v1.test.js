@@ -39,12 +39,14 @@ test('terminal resizing, account profile, and session export are wired', () => {
   assert.match(main, /tray-icon\.png/);
 });
 
-test('stable release notes and README cover Beta 1 through Beta 9', () => {
+test('stable release notes present one unified feature list', () => {
   const notes = read('docs/releases/v1.0.0.md');
   const readme = read('README.md');
-  for (let beta = 1; beta <= 9; beta += 1) {
-    assert.match(notes, new RegExp(`Beta ${beta}`));
-  }
+  assert.match(notes, /В Codex CLI Launcher v1 представлены следующие функции/);
+  assert.match(notes, /Выгрузка истории последнего запуска выбранной сессии в Markdown/);
+  assert.match(notes, /Codex CLI Launcher v1 introduces the following features/);
+  assert.match(notes, /Export the selected session's latest-run history to Markdown/);
+  assert.doesNotMatch(notes, /Developer Beta \d|Путь от Beta|From Beta/);
   assert.match(readme, /first stable release is .*v1\.0\.0/);
   assert.match(readme, /Первый стабильный релиз .*v1\.0\.0/);
 });
