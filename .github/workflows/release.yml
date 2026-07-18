@@ -1,9 +1,9 @@
-name: Developer Beta Release
+name: Release Builds
 
 on:
   push:
     tags:
-      - 'v*-beta.*'
+      - 'v*.*.*'
 
 permissions:
   contents: write
@@ -30,7 +30,7 @@ jobs:
           npm run check
           npm test
 
-      - name: Build macOS production artifacts
+      - name: Build macOS release artifacts
         run: npm run dist:mac
 
       - name: Verify ad-hoc signature
@@ -43,10 +43,12 @@ jobs:
 
       - name: Verify macOS artifacts
         run: |
+          version="$(node -p "require('./package.json').version")"
+          channel="$([[ "$version" == *-* ]] && echo beta || echo latest)"
           test -n "$(find dist -maxdepth 1 -name '*.dmg' -print -quit)"
           test -n "$(find dist -maxdepth 1 -name '*.zip' -print -quit)"
-          test -f dist/beta-mac.yml
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.8$' dist/beta-mac.yml
+          test -f "dist/${channel}-mac.yml"
+          grep -F "version: ${version}" "dist/${channel}-mac.yml"
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -55,7 +57,7 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.zip
-            dist/beta-mac.yml
+            dist/*-mac.yml
           if-no-files-found: error
 
   build-windows:
@@ -79,15 +81,17 @@ jobs:
           npm run check
           npm test
 
-      - name: Build Windows production artifacts
+      - name: Build Windows release artifacts
         run: npm run dist:win
 
       - name: Verify Windows artifacts
         shell: bash
         run: |
+          version="$(node -p "require('./package.json').version")"
+          channel="$([[ "$version" == *-* ]] && echo beta || echo latest)"
           test -n "$(find dist -maxdepth 1 -name '*win-x64.exe' -print -quit)"
-          test -f dist/beta.yml
-          grep -Eq '^version:[[:space:]]+1\.0\.0-beta\.8$' dist/beta.yml
+          test -f "dist/${channel}.yml"
+          grep -F "version: ${version}" "dist/${channel}.yml"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -95,5 +99,5 @@ jobs:
           name: windows-release
           path: |
             dist/*win-x64.exe
-            dist/beta.yml
+            dist/*.yml
           if-no-files-found: error

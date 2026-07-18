@@ -1,14 +1,16 @@
-const DISPLAY_VERSION = 'Developer Beta 8 (1.0.0-beta.8)';
-const RELEASE_NAME = 'Codex CLI Launcher Developer Beta 8';
+const DISPLAY_VERSION = 'Developer Beta 9 (1.0.0-beta.9)';
+const RELEASE_NAME = 'Codex CLI Launcher Developer Beta 9';
 
 const RELEASE_CHANGES = {
   ru: [
+    'Историю последнего запуска каждой сессии теперь можно сгрузить в Markdown через кнопку в списке сессий.',
     'Терминал теперь корректно подстраивается под размер окна и панелей без наложения на правую колонку.',
     'Профиль Codex отдельно показывает имя пользователя, email, тип подписки, оставшиеся лимиты и время их обновления.',
     'Профиль поддерживает данные локального Codex CLI и Codex CLI на выбранной VDS без чтения токенов.',
     'Обновлены иконки приложения для macOS, Windows и интерфейса Launcher; иконки menu bar и tray сохранены.'
   ],
   en: [
+    'The latest run of each session can now be exported to Markdown from the session list.',
     'The terminal now tracks window and panel size changes without overlapping the right column.',
     'The Codex profile separately shows the username, email, subscription type, remaining limits, and reset times.',
     'The profile supports both the local Codex CLI and the selected VDS Codex CLI without reading tokens.',
@@ -169,6 +171,9 @@ const TRANSLATIONS = {
     historyNew: 'новая',
     historyLoaded: 'загружена',
     historyEmpty: 'пусто',
+    historyExported: 'сгружена в Markdown',
+    exportSessionHistory: 'Сгрузить историю сессии',
+    exportSessionFailed: 'Не удалось сгрузить историю сессии.',
     noData: 'Нет данных.',
     noOutput: 'Нет вывода.',
     running: 'Выполняется...',
@@ -325,6 +330,9 @@ const TRANSLATIONS = {
     historyNew: 'new',
     historyLoaded: 'loaded',
     historyEmpty: 'empty',
+    historyExported: 'exported to Markdown',
+    exportSessionHistory: 'Export session history',
+    exportSessionFailed: 'Could not export session history.',
     noData: 'No data.',
     noOutput: 'No output.',
     running: 'Running...',
@@ -532,6 +540,7 @@ const sessionsByProject = {};
 const targetBySession = new Map();
 const stoppingSessions = new Set();
 const buffersByProject = {};
+const lastRunsByProject = {};
 
 function t(key) {
   const language = currentSettings.language === 'en' ? 'en' : 'ru';
@@ -615,6 +624,10 @@ function ensureProjectState(projectId) {
     buffersByProject[projectId] = project
       ? `${t('readyPrefix')} ${project.name} ${t('readySuffix')} ${connection} / ${project.location === 'local' ? 'codex' : appConfig.codexCommand}.\r\n`
       : '';
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(lastRunsByProject, projectId)) {
+    lastRunsByProject[projectId] = '';
   }
 }
 
@@ -946,7 +959,8 @@ function saveSettingsSoon() {
 function historyPayload() {
   return {
     activeTargetId: activeProjectId,
-    buffers: { ...buffersByProject }
+    buffers: { ...buffersByProject },
+    runs: { ...lastRunsByProject }
   };
 }
 
@@ -983,6 +997,12 @@ function applyHistory(history, { emptyAllowed = false } = {}) {
     }
   });
 
+  Object.entries(history?.runs || {}).forEach(([projectId, value]) => {
+    if (typeof value === 'string') {
+      lastRunsByProject[projectId] = value;
+    }
+  });
+
   if (history?.activeTargetId && getProject(history.activeTargetId)) {
     activeProjectId = history.activeTargetId;
   }
@@ -999,10 +1019,14 @@ function clampBuffer(projectId) {
   }
 }
 
-function writeLocal(projectId, text) {
+function writeLocal(projectId, text, { sessionHistory = false } = {}) {
   ensureProjectState(projectId);
   buffersByProject[projectId] += text;
+  if (sessionHistory) lastRunsByProject[projectId] += text;
   clampBuffer(projectId);
+  if (lastRunsByProject[projectId].length > 500000) {
+    lastRunsByProject[projectId] = lastRunsByProject[projectId].slice(-500000);
+  }
   saveHistorySoon();
 
   if (projectId === activeProjectId) {
@@ -1090,6 +1114,9 @@ function renderProjectList() {
     row.append(text, startButton, deleteButton, state);
     projectList.appendChild(row);
 
+    const sessionEntry = document.createElement('div');
+    sessionEntry.className = 'session-entry';
+
     const chip = document.createElement('button');
     chip.type = 'button';
     chip.className = 'session-chip';
@@ -1101,8 +1128,33 @@ function renderProjectList() {
     dot.setAttribute('aria-hidden', 'true');
 
     chip.append(dot, document.createTextNode(project.name));
-    sessionList.appendChild(chip);
+
+    const exportButton = document.createElement('button');
+    exportButton.type = 'button';
+    exportButton.className = 'icon-button session-export';
+    exportButton.dataset.exportSession = project.id;
+    exportButton.title = `${t('exportSessionHistory')}: ${project.name}`;
+    exportButton.setAttribute('aria-label', `${t('exportSessionHistory')}: ${project.name}`);
+    exportButton.textContent = '⇩';
+    exportButton.disabled = !lastRunsByProject[project.id].trim();
+    exportButton.addEventListener('click', () => exportSessionHistory(project));
+
+    sessionEntry.append(chip, exportButton);
+    sessionList.appendChild(sessionEntry);
   });
+}
+
+async function exportSessionHistory(project) {
+  const transcript = lastRunsByProject[project.id] || '';
+  if (!transcript.trim()) return;
+
+  try {
+    const result = await api.exportSessionHistory(project.id, transcript);
+    if (result.ok) historyStatus.textContent = t('historyExported');
+    else if (!result.canceled) window.alert(result.error || t('exportSessionFailed'));
+  } catch (_error) {
+    window.alert(t('exportSessionFailed'));
+  }
 }
 
 async function deleteProject(project) {
@@ -1116,6 +1168,7 @@ async function deleteProject(project) {
     if (!result.ok) throw new Error(result.error || 'Could not remove the project.');
     delete sessionsByProject[project.id];
     delete buffersByProject[project.id];
+    delete lastRunsByProject[project.id];
     applyConfig(result.config);
     applyHistory(result.history, { emptyAllowed: true });
     renderActiveBuffer();
@@ -1302,6 +1355,10 @@ function updateControls() {
     chip.classList.toggle('active', projectId === activeProjectId);
     chip.classList.toggle('running', Boolean(sessionsByProject[projectId]));
   });
+
+  document.querySelectorAll('[data-export-session]').forEach((button) => {
+    button.disabled = !(lastRunsByProject[button.dataset.exportSession] || '').trim();
+  });
 }
 
 function switchProject(projectId) {
@@ -1401,23 +1458,24 @@ async function startSession(projectId = activeProjectId) {
   }
 
   switchProject(projectId);
+  lastRunsByProject[projectId] = '';
   const connection = project.location === 'local'
     ? `${t('projectLocal')} / codex`
     : `ssh ${appConfig.sshAlias} / ${appConfig.codexCommand}`;
-  writeLocal(projectId, `\r\n[session] ${t('startSessionLog')} ${project.name} through ${connection}...\r\n`);
+  writeLocal(projectId, `\r\n[session] ${t('startSessionLog')} ${project.name} through ${connection}...\r\n`, { sessionHistory: true });
   updateControls();
 
   const result = await api.terminalStart(projectId);
 
   if (!result.ok) {
-    writeLocal(projectId, `[session] ${t('startFailed')}: ${result.error || t('unknownError')}\r\n`);
+    writeLocal(projectId, `[session] ${t('startFailed')}: ${result.error || t('unknownError')}\r\n`, { sessionHistory: true });
     updateControls();
     return;
   }
 
   sessionsByProject[projectId] = result.sessionId;
   targetBySession.set(result.sessionId, projectId);
-  if (result.warning) writeLocal(projectId, `[session] ${result.warning}\r\n`);
+  if (result.warning) writeLocal(projectId, `[session] ${result.warning}\r\n`, { sessionHistory: true });
   updateControls();
   fitAndResize();
 }
@@ -1434,7 +1492,7 @@ async function stopSession(projectId = activeProjectId) {
   await api.terminalStop(sessionId);
   sessionsByProject[projectId] = null;
   targetBySession.delete(sessionId);
-  writeLocal(projectId, `\r\n[session] ${project.name} ${t('sessionStopped')}.\r\n`);
+  writeLocal(projectId, `\r\n[session] ${project.name} ${t('sessionStopped')}.\r\n`, { sessionHistory: true });
   updateControls();
 }
 
@@ -1865,7 +1923,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
           <article><strong>On a VDS over SSH</strong><span>Uses your OpenSSH alias and the Codex CLI installed on the server. VDS configuration and status are shown only in this mode.</span></article>
         </section>
         <section class="release-highlights">
-          <h3>What changed in Developer Beta 8</h3>
+          <h3>What changed in Developer Beta 9</h3>
           <ul>${changes}</ul>
         </section>
         <ol class="guide-steps">
@@ -1890,7 +1948,7 @@ function setupGuideMarkup({ welcome = false } = {}) {
         <article><strong>На VDS через SSH</strong><span>Использует ваш OpenSSH alias и Codex CLI на сервере. Конфигурация и статус VDS видны только в этом режиме.</span></article>
       </section>
       <section class="release-highlights">
-        <h3>Что изменилось в Developer Beta 8</h3>
+        <h3>Что изменилось в Developer Beta 9</h3>
         <ul>${changes}</ul>
       </section>
       <ol class="guide-steps">
@@ -2064,7 +2122,7 @@ api.onTerminalData(({ sessionId, data }) => {
     return;
   }
 
-  writeLocal(projectId, data);
+  writeLocal(projectId, data, { sessionHistory: true });
 });
 
 api.onTerminalExit(({ sessionId, projectId, exitCode, signal }) => {
@@ -2085,7 +2143,8 @@ api.onTerminalExit(({ sessionId, projectId, exitCode, signal }) => {
 
   writeLocal(
     knownProjectId,
-    `\r\n[session] ${t('sessionExited')} ${exitCode ?? t('unknown')}${signal ? `, ${t('signal')} ${signal}` : ''}.\r\n`
+    `\r\n[session] ${t('sessionExited')} ${exitCode ?? t('unknown')}${signal ? `, ${t('signal')} ${signal}` : ''}.\r\n`,
+    { sessionHistory: true }
   );
   updateControls();
 });

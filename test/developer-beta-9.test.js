@@ -1,20 +1,22 @@
 const assert = require('node:assert/strict');
+// Developer Beta 9 integration checks.
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { normalizeCodexAccount } = require('../src/shared/codex-account');
+const { buildSessionHistoryMarkdown, sessionHistoryFileName } = require('../src/shared/session-history');
 
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('Developer Beta 8 branding and release version stay aligned', () => {
+test('Developer Beta 9 branding and release version stay aligned', () => {
   const packageJson = JSON.parse(read('package.json'));
-  assert.equal(packageJson.version, '1.0.0-beta.8');
-  assert.equal(packageJson.releaseName, 'Codex CLI Launcher Developer Beta 8');
+  assert.equal(packageJson.version, '1.0.0-beta.9');
+  assert.equal(packageJson.releaseName, 'Codex CLI Launcher Developer Beta 9');
   assert.match(packageJson.build.artifactName, /^Codex-CLI-Launcher-Beta-/);
 });
 
-test('terminal resizing and the expanded account profile are wired', () => {
+test('terminal resizing, account profile, and session export are wired', () => {
   const html = read('src/renderer/index.html');
   const renderer = read('src/renderer/app.js');
   const main = read('src/main.js');
@@ -26,15 +28,32 @@ test('terminal resizing and the expanded account profile are wired', () => {
   assert.match(main, /account\/rateLimits\/read/);
   assert.match(renderer, /new ResizeObserver\(scheduleFit\)/);
   assert.match(renderer, /accountProfile\.scrollIntoView/);
-  assert.match(renderer, /Что изменилось в Developer Beta 8/);
-  assert.match(renderer, /What changed in Developer Beta 8/);
+  assert.match(renderer, /Что изменилось в Developer Beta 9/);
+  assert.match(renderer, /What changed in Developer Beta 9/);
+  assert.match(renderer, /exportSessionHistory/);
+  assert.match(main, /history:exportSession/);
   assert.match(main, /tray-icon\.png/);
+});
+
+test('session export produces readable Markdown without terminal control sequences', () => {
+  const markdown = buildSessionHistoryMarkdown({
+    project: { name: 'Demo / Project', path: '/tmp/demo' },
+    transcript: '\u001b[32mhello\u001b[0m\r\nworld',
+    exportedAt: '2026-07-19T00:00:00.000Z'
+  });
+
+  assert.match(markdown, /## Последний запуск/);
+  assert.match(markdown, /    hello\n    world/);
+  assert.doesNotMatch(markdown, /\u001b/);
+  assert.equal(sessionHistoryFileName('Demo / Project'), 'Demo - Project-history.md');
 });
 
 test('release workflow only builds artifacts so the maintainer remains the release author', () => {
   const workflow = read('.github/workflows/release.yml');
   assert.match(workflow, /name: macos-release/);
   assert.match(workflow, /name: windows-release/);
+  assert.match(workflow, /'v\*\.\*\.\*'/);
+  assert.match(workflow, /channel=.*beta.*latest/);
   assert.doesNotMatch(workflow, /gh release create|publish-release:/);
 });
 
